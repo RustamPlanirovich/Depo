@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
+// Remove the default light theme import and use only our custom styling
+// import 'react-calendar/dist/Calendar.css';
 import { getGoalsForDate } from '../../utils/goals';
 
 /**
@@ -93,7 +94,7 @@ const GoalCalendar = ({
         Нажмите на дату, чтобы создать цель с дедлайном на этот день.
       </p>
       
-      <div className="calendar-container">
+      <div className="calendar-container dark-calendar">
         <Calendar
           onChange={handleDateClick}
           value={date}
@@ -144,60 +145,72 @@ const GoalCalendar = ({
       )}
       
       {/* Custom styles for calendar */}
-      <style jsx>{`
+      <style jsx global>{`
+        /* Import override - force dark theme */
+        .dark-calendar .react-calendar {
+          background-color: #0f172a !important;
+          color: white !important;
+          border: 1px solid #1f2937 !important;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5) !important;
+        }
+        
         /* Override calendar styles for dark theme */
         .calendar-container {
-          --main-color: #1e293b;
-          --main-bg-color: #1e293b;
+          --main-color: #0f172a;
+          --main-bg-color: #0f172a;
           --main-font-color: #e2e8f0;
-          --secondary-color: #3b82f6;
+          --secondary-color: #2563eb;
           --secondary-font-color: white;
         }
         
         /* Calendar tile styles */
-        :global(.react-calendar) {
-          background-color: #1e293b;
-          color: #e2e8f0;
-          border: none;
+        .dark-calendar .react-calendar {
+          background-color: #0f172a !important;
+          color: #e2e8f0 !important;
+          border: none !important;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
         }
         
-        :global(.react-calendar__tile) {
+        .dark-calendar .react-calendar__tile {
           position: relative;
           padding-bottom: 24px;
+          background-color: #1e293b !important;
+          color: #e2e8f0 !important;
+          margin: 1px;
         }
         
-        :global(.react-calendar__tile--active) {
-          background-color: #3b82f6;
-          color: white;
+        .dark-calendar .react-calendar__tile--active {
+          background-color: #2563eb !important;
+          color: white !important;
         }
         
-        :global(.react-calendar__tile:enabled:hover) {
-          background-color: #4b5563;
+        .dark-calendar .react-calendar__tile:enabled:hover {
+          background-color: #374151 !important;
         }
         
-        :global(.react-calendar__month-view__days__day--weekend) {
-          color: #fb7185;
+        .dark-calendar .react-calendar__month-view__days__day--weekend {
+          color: #fb7185 !important;
         }
         
-        :global(.react-calendar__tile--now) {
-          background-color: rgba(59, 130, 246, 0.2);
+        .dark-calendar .react-calendar__tile--now {
+          background-color: rgba(37, 99, 235, 0.25) !important;
         }
         
-        :global(.goal-active) {
-          border-bottom: 3px solid #3b82f6;
+        .dark-calendar .goal-active {
+          border-bottom: 3px solid #3b82f6 !important;
         }
         
-        :global(.goal-completed) {
-          border-bottom: 3px solid #22c55e;
+        .dark-calendar .goal-completed {
+          border-bottom: 3px solid #22c55e !important;
         }
         
-        :global(.goal-failed) {
-          border-bottom: 3px solid #ef4444;
+        .dark-calendar .goal-failed {
+          border-bottom: 3px solid #ef4444 !important;
         }
         
         /* Goal indicator styles */
-        :global(.goal-indicator-container) {
+        .dark-calendar .goal-indicator-container {
           position: absolute;
           bottom: 6px;
           left: 0;
@@ -206,7 +219,7 @@ const GoalCalendar = ({
           justify-content: center;
         }
         
-        :global(.goal-indicator) {
+        .dark-calendar .goal-indicator {
           width: 6px;
           height: 6px;
           border-radius: 50%;
@@ -214,21 +227,61 @@ const GoalCalendar = ({
         }
         
         /* Navigation buttons */
-        :global(.react-calendar__navigation button) {
-          color: #e2e8f0;
+        .dark-calendar .react-calendar__navigation {
+          background-color: #0f172a !important;
+          padding: 8px;
+          border-radius: 6px 6px 0 0;
+          margin-bottom: 5px;
         }
         
-        :global(.react-calendar__navigation button:enabled:hover) {
-          background-color: #4b5563;
+        .dark-calendar .react-calendar__navigation button {
+          color: #e2e8f0 !important;
+          background: none !important;
+        }
+        
+        .dark-calendar .react-calendar__navigation button:enabled:hover {
+          background-color: #334155 !important;
         }
         
         /* Header (day names) */
-        :global(.react-calendar__month-view__weekdays__weekday) {
-          color: #9ca3af;
+        .dark-calendar .react-calendar__month-view__weekdays {
+          background-color: #1e293b !important;
+          border-radius: 4px;
+          margin-bottom: 8px;
         }
         
-        :global(.react-calendar__month-view__weekdays__weekday abbr) {
+        .dark-calendar .react-calendar__month-view__weekdays__weekday {
+          color: #94a3b8 !important;
+        }
+        
+        .dark-calendar .react-calendar__month-view__weekdays__weekday abbr {
           text-decoration: none;
+          color: #94a3b8 !important;
+        }
+        
+        /* Year and decade views */
+        .dark-calendar .react-calendar__year-view__months__month,
+        .dark-calendar .react-calendar__decade-view__years__year,
+        .dark-calendar .react-calendar__century-view__decades__decade {
+          background-color: #1e293b !important;
+          color: #e2e8f0 !important;
+          margin: 1px;
+        }
+        
+        .dark-calendar .react-calendar__year-view__months__month:hover,
+        .dark-calendar .react-calendar__decade-view__years__year:hover,
+        .dark-calendar .react-calendar__century-view__decades__decade:hover {
+          background-color: #374151 !important;
+        }
+        
+        /* Overwrite default import */
+        .dark-calendar .react-calendar__month-view__days {
+          background-color: #0f172a !important;
+        }
+        
+        .dark-calendar .react-calendar__month-view__days__day--neighboringMonth {
+          color: #64748b !important;
+          background-color: #0f172a !important;
         }
       `}</style>
     </div>

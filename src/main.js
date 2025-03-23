@@ -58,6 +58,7 @@ const DepositTracker = () => {
   const [newGoalDailyTarget, setNewGoalDailyTarget] = useState(dailyTarget);
   // Consecutive wins goal settings
   const [newGoalConsecutiveWins, setNewGoalConsecutiveWins] = useState(5);
+  const [editingTransactionIndex, setEditingTransactionIndex] = useState(null);
 
   // Загрузка данных из localStorage при инициализации
   useEffect(() => {
@@ -240,13 +241,23 @@ const DepositTracker = () => {
   };
 
   // Редактирование дня
-  const startEditingDay = (index) => {
+  const startEditingDay = (index, transactionIndex = null) => {
     setEditingDayIndex(index);
+    setEditingTransactionIndex(transactionIndex);
     const day = days[index];
-    if (inputMode === 'percentage') {
-      setNewPercentage(day.percentage.toString());
+    if (transactionIndex !== null) {
+      const transaction = day.transactions[transactionIndex];
+      if (inputMode === 'percentage') {
+        setNewPercentage(transaction.percentage.toString());
+      } else {
+        setNewAmount(transaction.amount.toString());
+      }
     } else {
-      setNewAmount(day.amount.toString());
+      if (inputMode === 'percentage') {
+        setNewPercentage(day.percentage.toString());
+      } else {
+        setNewAmount(day.amount.toString());
+      }
     }
   };
 
@@ -314,6 +325,7 @@ const DepositTracker = () => {
     setDays(updatedDays);
     setDeposit(updatedDays[updatedDays.length - 1].deposit);
     setEditingDayIndex(null);
+    setEditingTransactionIndex(null);
     setNewPercentage('');
     setNewAmount('');
   };
@@ -321,6 +333,7 @@ const DepositTracker = () => {
   // Отмена редактирования
   const cancelEditing = () => {
     setEditingDayIndex(null);
+    setEditingTransactionIndex(null);
     setNewPercentage('');
     setNewAmount('');
   };
@@ -1401,7 +1414,6 @@ const DepositTracker = () => {
         {activeSection === 'archive' && (
           <ArchiveSection 
             archivedDays={archivedDays}
-            clearArchive={clearArchive}
             restoreFromArchive={restoreFromArchive}
             deleteFromArchive={deleteFromArchive}
           />
@@ -1410,17 +1422,20 @@ const DepositTracker = () => {
         {/* Settings Section */}
         {activeSection === 'settings' && (
           <SettingsSection 
-            deposit={deposit}
             leverage={leverage}
+            setLeverage={setLeverage}
             dailyTarget={dailyTarget}
+            setDailyTarget={setDailyTarget}
             initialDeposit={initialDeposit}
+            setInitialDeposit={setInitialDeposit}
+            deposit={deposit}
             days={days}
-            updateSettings={updateSettings}
-            exportData={exportData}
-            importData={importData}
-            resetData={resetData}
-            checkLocalStorage={checkLocalStorage}
-            forceSaveData={forceSaveData}
+            setDays={setDays}
+            archivedDays={archivedDays}
+            setArchivedDays={setArchivedDays}
+            goals={goals}
+            setGoals={setGoals}
+            setActiveSection={setActiveSection}
           />
         )}
       </div>
@@ -1444,7 +1459,8 @@ const DashboardSection = ({
   addDay,
   editingDayIndex,
   saveEditedDay,
-  cancelEditing
+  cancelEditing,
+  editingTransactionIndex
 }) => {
   return (
     <div>
@@ -1479,11 +1495,20 @@ const DashboardSection = ({
         
         {/* Number of Days */}
         <div className="bg-gray-800 p-4 rounded border border-gray-700">
-          <h3 className="text-sm text-gray-400 mb-2">Кол-во сделок</h3>
+          <h3 className="text-sm text-gray-400 mb-2">Всего дней</h3>
           <div className="text-2xl font-bold text-purple-300">{days.length}</div>
           {days.length > 0 && (
             <div className="text-xs text-gray-500 mt-1">
-              Последняя: {days[days.length - 1].date}
+              {(() => {
+                // Calculate total transactions
+                const totalTransactions = days.reduce((count, day) => {
+                  return count + (day.transactions ? day.transactions.length : 1);
+                }, 0);
+                
+                return totalTransactions > days.length ? 
+                  `Всего сделок: ${totalTransactions}` : 
+                  `Последняя: ${days[days.length - 1].date}`;
+              })()}
             </div>
           )}
         </div>
@@ -1630,6 +1655,11 @@ const TransactionsSection = ({
   deposit,
   setActiveSection
 }) => {
+  // Calculate total transactions
+  const totalTransactions = days.reduce((count, day) => {
+    return count + (day.transactions ? day.transactions.length : 1);
+  }, 0);
+  
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6 text-blue-300">История сделок</h1>
@@ -1638,8 +1668,14 @@ const TransactionsSection = ({
         <div className="bg-gray-800 p-4 rounded border border-gray-700">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <span className="text-sm text-gray-400">Всего сделок: </span>
+              <span className="text-sm text-gray-400">Всего дней: </span>
               <span className="font-bold">{days.length}</span>
+              {totalTransactions > days.length && (
+                <>
+                  <span className="ml-4 text-sm text-gray-400">Всего сделок: </span>
+                  <span className="font-bold">{totalTransactions}</span>
+                </>
+              )}
               <span className="ml-4 text-sm text-gray-400">Общий прирост: </span>
               <span className="font-bold text-green-400">{((deposit / initialDeposit - 1) * 100).toFixed(2)}%</span>
             </div>
@@ -2375,16 +2411,33 @@ const ArchiveSection = ({
               </thead>
               <tbody>
                 {archivedDays.map((day, index) => (
-                  <tr key={day.day} style={{ backgroundColor: 
-                    day.color === 'green' ? 'rgba(74, 222, 128, 0.2)' : 
-                    day.color === 'red' ? 'rgba(248, 113, 113, 0.2)' :
-                    day.color === 'purple' ? 'rgba(192, 132, 252, 0.2)' : 
-                    'rgba(125, 211, 252, 0.2)' 
-                  }}>
-                    <td className="p-2">{day.day}</td>
-                    <td className="p-2">{day.date}</td>
-                    <td className="p-2">{day.percentage.toFixed(2)}% {day.additionalText}</td>
-                    <td className="p-2">${day.amount.toFixed(2)}</td>
+                  <tr key={index} className="border-t border-gray-700">
+                    <td className="p-2">
+                      <div className="flex items-center">
+                        <span>{day.day}</span>
+                        {day.transactions && day.transactions.length === 1 && day.transactions[0].timestamp && (
+                          <div className="ml-2 px-2 py-0.5 bg-blue-900 rounded text-blue-300 text-xs">
+                            Сделка
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-2">
+                      <div>
+                        {day.date}
+                        {day.transactions && day.transactions.length === 1 && day.transactions[0].timestamp && (
+                          <div className="text-xs text-gray-400 mt-1">
+                            {new Date(day.transactions[0].timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-2 font-medium" style={{ color: day.percentage >= 0 ? '#4ade80' : '#f87171' }}>
+                      {day.percentage.toFixed(2)}%
+                    </td>
+                    <td className="p-2 font-medium" style={{ color: day.amount >= 0 ? '#4ade80' : '#f87171' }}>
+                      ${day.amount.toFixed(2)}
+                    </td>
                     <td className="p-2">${day.deposit.toFixed(2)}</td>
                     <td className="p-2">
                       <div className="flex space-x-2">

@@ -10,6 +10,7 @@ const Transactions = ({
   leverage,
   startEditingDay,
   archiveDay,
+  archiveTransaction,
   deleteDay,
   initialDeposit,
   deposit,
@@ -37,6 +38,7 @@ const Transactions = ({
               days={days}
               startEditingDay={startEditingDay}
               archiveDay={archiveDay}
+              archiveTransaction={archiveTransaction}
               deleteDay={deleteDay}
               setActiveSection={setActiveSection}
             />

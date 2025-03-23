@@ -34,6 +34,14 @@ const TransactionsSummary = ({ days, initialDeposit, deposit, leverage }) => {
   const unprofitableDays = days.filter(day => day.percentage < 0).length;
   const neutralDays = days.filter(day => day.percentage === 0).length;
   
+  // Calculate total transactions
+  const totalTransactions = days.reduce((count, day) => {
+    return count + (day.transactions ? day.transactions.length : 1);
+  }, 0);
+  
+  // Should we display transactions count separately?
+  const showTransactionsCount = totalTransactions > days.length;
+  
   return (
     <div className="bg-gray-800 rounded-lg shadow-lg p-5">
       <h2 className="text-xl font-semibold text-blue-300 mb-4">Статистика</h2>
@@ -50,10 +58,15 @@ const TransactionsSummary = ({ days, initialDeposit, deposit, leverage }) => {
           </div>
         </div>
         
-        {/* Days Count */}
+        {/* Days and Transactions Count */}
         <div className="p-4 bg-gray-700 rounded-lg">
-          <div className="text-gray-400 mb-1 text-sm">Всего дней</div>
-          <div className="text-xl font-medium text-white">{days.length}</div>
+          <div className="text-gray-400 mb-1 text-sm">Статистика дней</div>
+          <div className="text-xl font-medium text-white">{days.length} {showTransactionsCount ? 'дней' : ''}</div>
+          {showTransactionsCount && (
+            <div className="text-lg font-medium text-blue-300 mt-1">
+              {totalTransactions} транзакций
+            </div>
+          )}
           <div className="flex items-center justify-between mt-2 text-sm">
             <div>
               <span className="inline-block w-3 h-3 rounded-full bg-green-500 mr-1"></span>

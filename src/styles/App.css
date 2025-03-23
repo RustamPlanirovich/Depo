@@ -1,30 +1,55 @@
-/* Calendar Styles */
+/* Calendar Styles - Dark Theme */
+/* Base structure for calendar */
 .react-calendar {
   width: 100%;
-  background-color: #1f2937;
-  color: white;
+  max-width: 100%;
+  background-color: #0f172a !important;
+  color: white !important;
   border-radius: 0.375rem;
-  border: 1px solid #374151;
+  border: 1px solid #1f2937;
   padding: 10px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  line-height: 1.125em;
+}
+
+.react-calendar *,
+.react-calendar *:before,
+.react-calendar *:after {
+  box-sizing: border-box;
+}
+
+.react-calendar button {
+  margin: 0;
+  border: 0;
+  outline: none;
+}
+
+.react-calendar button:enabled:hover {
+  cursor: pointer;
 }
 
 .react-calendar__navigation {
   display: flex;
   margin-bottom: 10px;
+  background-color: #0f172a !important;
+  padding: 8px;
+  border-radius: 6px 6px 0 0;
+  height: 44px;
 }
 
 .react-calendar__navigation button {
   min-width: 44px;
-  background: none;
-  color: white;
+  background: none !important;
+  color: white !important;
   padding: 5px;
   border-radius: 0.25rem;
 }
 
 .react-calendar__navigation button:enabled:hover,
 .react-calendar__navigation button:enabled:focus {
-  background-color: #374151;
+  background-color: #334155 !important;
+  color: white !important;
 }
 
 .react-calendar__navigation button[disabled] {
@@ -37,14 +62,23 @@
   text-transform: uppercase;
   font-size: 0.75em;
   margin-bottom: 5px;
+  background-color: #1e293b !important;
+  border-radius: 4px;
+  margin-bottom: 8px;
 }
 
 .react-calendar__month-view__weekdays__weekday {
   padding: 5px;
+  color: #94a3b8 !important;
 }
 
 .react-calendar__month-view__weekdays__weekday abbr {
   text-decoration: none;
+  color: #94a3b8 !important;
+}
+
+.react-calendar__month-view {
+  background-color: #0f172a !important;
 }
 
 .react-calendar__tile {
@@ -52,34 +86,53 @@
   text-align: center;
   border-radius: 0.25rem;
   position: relative;
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+  margin: 1px;
 }
 
 .react-calendar__tile:enabled:hover,
 .react-calendar__tile:enabled:focus {
-  background-color: #374151;
+  background-color: #374151 !important;
+  color: white !important;
 }
 
 .react-calendar__tile--now {
-  background-color: #4b5563;
+  background-color: rgba(37, 99, 235, 0.25) !important;
+  color: white !important;
 }
 
 .react-calendar__tile--active {
-  background: #3b82f6;
-  color: white;
+  background: #2563eb !important;
+  color: white !important;
 }
 
 .react-calendar__month-view__days__day--weekend {
-  color: #f87171;
+  color: #fb7185 !important;
 }
 
 .react-calendar__month-view__days__day--neighboringMonth {
-  color: #6b7280;
+  color: #64748b !important;
+  background-color: #0f172a !important;
+}
+
+.react-calendar__year-view__months__month,
+.react-calendar__decade-view__years__year,
+.react-calendar__century-view__decades__decade {
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+.react-calendar__year-view__months__month:enabled:hover,
+.react-calendar__decade-view__years__year:enabled:hover,
+.react-calendar__century-view__decades__decade:enabled:hover {
+  background-color: #374151 !important;
 }
 
 /* Custom styles for goal deadline indicators */
 .goal-deadline-date {
-  background-color: rgba(59, 130, 246, 0.15);
-  border: 1px solid #3b82f6;
+  background-color: rgba(37, 99, 235, 0.15) !important;
+  border: 1px solid #2563eb !important;
 }
 
 .goal-indicators {
@@ -121,4 +174,21 @@
     width: 4px;
     height: 4px;
   }
+}
+
+/* Daily Goal Achievement Animation */
+@keyframes goalPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+.goal-achieved-pulse {
+  animation: goalPulse 2s infinite;
 } 

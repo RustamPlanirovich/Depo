@@ -27,6 +27,10 @@ const InputForm = ({
     ? calculateAmountFromPercentage(deposit, parseFloat(newPercentage), leverage)
     : null;
   
+  // Calculate unleveraged values
+  const unleveragedAmount = calculatedAmount ? calculatedAmount / leverage : null;
+  const unleveragedPercentage = parseFloat(newPercentage) || 0;
+  
   return (
     <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
       <h2 className="text-xl font-semibold text-blue-300 mb-4">
@@ -63,7 +67,9 @@ const InputForm = ({
               
               {newPercentage && (
                 <div className="mt-2 text-sm text-gray-400">
-                  Прибыль: ${(calculatedAmount || 0).toFixed(2)}
+                  <div>% от депозита: {unleveragedPercentage.toFixed(2)}%</div>
+                  <div>Базовая сумма: ${unleveragedAmount ? unleveragedAmount.toFixed(2) : '0.00'}</div>
+                  <div>С плечом {leverage}x: ${calculatedAmount ? calculatedAmount.toFixed(2) : '0.00'}</div>
                 </div>
               )}
             </div>
@@ -84,7 +90,9 @@ const InputForm = ({
               
               {newAmount && (
                 <div className="mt-2 text-sm text-gray-400">
-                  Процент: {(calculatedPercentage || 0).toFixed(2)}%
+                  <div>С плечом {leverage}x: ${parseFloat(newAmount).toFixed(2)}</div>
+                  <div>Без плеча: ${(parseFloat(newAmount) / leverage).toFixed(2)}</div>
+                  <div>% от депозита: {calculatedPercentage ? calculatedPercentage.toFixed(2) : '0.00'}%</div>
                 </div>
               )}
             </div>

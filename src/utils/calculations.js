@@ -22,7 +22,10 @@ export const calculateCurrentDeposit = (initialDeposit, days) => {
  * @returns {number} - Calculated amount
  */
 export const calculateAmountFromPercentage = (deposit, percentage, leverage) => {
-  return (deposit * percentage * leverage) / 100;
+  // First calculate the amount based on percentage of deposit
+  const unleveragedAmount = (deposit * percentage) / 100;
+  // Then multiply by leverage to get the final amount
+  return unleveragedAmount * leverage;
 };
 
 /**
@@ -33,7 +36,10 @@ export const calculateAmountFromPercentage = (deposit, percentage, leverage) => 
  * @returns {number} - Calculated percentage
  */
 export const calculatePercentageFromAmount = (deposit, amount, leverage) => {
-  return (amount * 100) / (deposit * leverage);
+  // First get the unleveraged amount by dividing by leverage
+  const unleveragedAmount = amount / leverage;
+  // Then calculate percentage based on the unleveraged amount relative to deposit
+  return (unleveragedAmount * 100) / deposit;
 };
 
 /**

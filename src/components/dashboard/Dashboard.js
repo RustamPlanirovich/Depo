@@ -18,6 +18,7 @@ const Dashboard = ({
   handleAmountChange,
   addDay,
   editingDayIndex,
+  editingTransactionIndex,
   saveEditedDay,
   cancelEditing
 }) => {
@@ -30,6 +31,36 @@ const Dashboard = ({
   
   // Determine if we're in edit mode
   const isEditing = editingDayIndex !== null;
+  
+  // Get editing message
+  const getEditingMessage = () => {
+    if (!isEditing) return '';
+    
+    const day = days[editingDayIndex];
+    if (editingTransactionIndex !== null && day.transactions && day.transactions.length > 0) {
+      return `Транзакция #${editingTransactionIndex + 1} за ${day.date} (День ${day.day})`;
+    }
+    return `День ${day.day} (${day.date})`;
+  };
+  
+  // Determine if today's goal is achieved
+  const isTodayGoalAchieved = () => {
+    // Check if there's a transaction for today
+    const today = new Date().toISOString().split('T')[0];
+    const todayEntry = days.find(day => day.date === today);
+
+    // If no transactions today, goal is not achieved
+    if (!todayEntry) return false;
+
+    // Goal is achieved if today's percentage is greater than or equal to daily target
+    return todayEntry.percentage >= dailyTarget;
+  };
+
+  // Determine goal achievement status
+  const goalAchieved = isTodayGoalAchieved();
+  const goalBgGradient = goalAchieved 
+    ? 'bg-gradient-to-br from-gray-800 to-green-800 goal-achieved-pulse' 
+    : 'bg-gradient-to-br from-gray-800 to-red-800';
   
   return (
     <div>
@@ -50,7 +81,7 @@ const Dashboard = ({
           <h2 className="text-xl font-semibold mb-2 text-blue-300">Общий рост</h2>
           <p className={`text-3xl font-bold ${totalGrowth >= 0 ? 'text-green-500' : 'text-red-500'}`}>
             {totalGrowth >= 0 ? '+' : ''}{formatNumber(totalGrowth)}$ 
-            ({totalGrowthPercentage >= 0 ? '+' : ''}{formatPercentage(totalGrowthPercentage)}%)
+            ({totalGrowthPercentage >= 0 ? '+' : ''}{formatPercentage(totalGrowthPercentage)})
           </p>
           <div className="mt-2 text-sm text-gray-400">
             Всего дней: {days.length}
@@ -58,13 +89,14 @@ const Dashboard = ({
         </div>
         
         {/* Daily Target Card */}
-        <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
+        <div className={`rounded-lg p-6 shadow-lg ${goalBgGradient} transition-colors duration-300`}>
           <h2 className="text-xl font-semibold mb-2 text-blue-300">Дневная цель</h2>
           <p className="text-3xl font-bold text-yellow-500">
-            {formatPercentage(dailyTarget)}% ({formatNumber(dailyTargetAmount)}$)
+            {formatPercentage(dailyTarget)} ({formatNumber(dailyTargetAmount)}$)
           </p>
-          <div className="mt-2 text-sm text-gray-400">
+          <div className="mt-2 text-sm text-gray-300">
             Кредитное плечо: {leverage}x
+            {goalAchieved && <span className="ml-2 text-green-300">✓ Достигнуто</span>}
           </div>
         </div>
       </div>
@@ -74,6 +106,12 @@ const Dashboard = ({
         <h2 className="text-xl font-semibold mb-4">
           {isEditing ? 'Редактировать транзакцию' : 'Добавить новую транзакцию'}
         </h2>
+        
+        {isEditing && (
+          <div className="mb-4 text-blue-300 text-sm font-medium">
+            Редактируется: {getEditingMessage()}
+          </div>
+        )}
         
         <div className="flex flex-col md:flex-row gap-4 items-start">
           {/* Toggle Input Mode */}
@@ -107,7 +145,9 @@ const Dashboard = ({
               </div>
               {newPercentage && (
                 <div className="mt-2 text-sm text-gray-400">
-                  Примерная сумма: {formatNumber((deposit * parseFloat(newPercentage) * leverage) / 100)}$
+                  Расчет: {formatPercentage(parseFloat(newPercentage))} от ${formatNumber(deposit)} = ${formatNumber((deposit * parseFloat(newPercentage)) / 100)}
+                  <br />
+                  С плечом {leverage}x: ${formatNumber((deposit * parseFloat(newPercentage) * leverage) / 100)}
                 </div>
               )}
             </div>
@@ -131,7 +171,9 @@ const Dashboard = ({
               </div>
               {newAmount && (
                 <div className="mt-2 text-sm text-gray-400">
-                  Примерный процент: {formatPercentage((parseFloat(newAmount) * 100) / (deposit * leverage))}
+                  С плечом {leverage}x: ${formatNumber(parseFloat(newAmount))}
+                  <br />
+                  Без плеча: ${formatNumber(parseFloat(newAmount) / leverage)} ({formatPercentage((parseFloat(newAmount) / leverage * 100) / deposit)} от депозита)
                 </div>
               )}
             </div>
@@ -190,6 +232,9 @@ const Dashboard = ({
                   <th className="px-4 py-3 bg-gray-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Депозит
                   </th>
+                  <th className="px-4 py-3 bg-gray-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Сделок
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-gray-800 divide-y divide-gray-700">
@@ -205,6 +250,9 @@ const Dashboard = ({
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {formatNumber(day.deposit)}$
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      {day.transactions ? day.transactions.length : 1}
                     </td>
                   </tr>
                 ))}

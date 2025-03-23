@@ -32,6 +32,7 @@ const DepositTracker = () => {
   const [newAmount, setNewAmount] = useState('');
   const [inputMode, setInputMode] = useState('percentage');
   const [editingDayIndex, setEditingDayIndex] = useState(null);
+  const [editingTransactionIndex, setEditingTransactionIndex] = useState(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   
   // Analytics section state
@@ -105,44 +106,97 @@ const DepositTracker = () => {
     
     if (inputMode === 'percentage') {
       percentage = parseFloat(newPercentage);
+      // Amount is calculated from percentage of deposit, then multiplied by leverage
       amount = calculateAmountFromPercentage(deposit, percentage, leverage);
     } else {
       amount = parseFloat(newAmount);
+      // Percentage is calculated by first dividing the amount by leverage to get the raw amount
       percentage = calculatePercentageFromAmount(deposit, amount, leverage);
     }
     
-    // Create new day object
+    // Get today's date
     const today = new Date().toISOString().split('T')[0];
     const newDeposit = deposit + amount;
     
-    const newDay = {
-      day: days.length + 1,
-      date: today,
-      percentage: percentage,
-      amount: amount,
-      deposit: newDeposit
-    };
+    // Check if there's already a transaction for today
+    const todayIndex = days.findIndex(day => day.date === today);
     
-    // Update state
-    setDays([...days, newDay]);
+    if (todayIndex === -1) {
+      // No transactions for today - create a new day
+      const newDay = {
+        day: days.length + 1,
+        date: today,
+        percentage: percentage,
+        amount: amount,
+        deposit: newDeposit,
+        transactions: [{ percentage, amount, timestamp: new Date().toISOString() }]
+      };
+      
+      // Update state
+      setDays([...days, newDay]);
+    } else {
+      // There's already a transaction for today - update it
+      const updatedDays = [...days];
+      const todayEntry = { ...updatedDays[todayIndex] };
+      
+      // Add the new transaction to today's transactions
+      const transactions = todayEntry.transactions || [];
+      transactions.push({ percentage, amount, timestamp: new Date().toISOString() });
+      
+      // Update the day's total amount
+      const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0);
+      
+      // Calculate the total percentage based on the total amount divided by leverage
+      // relative to the original deposit before any transactions today
+      const baseDeposit = todayEntry.deposit - todayEntry.amount; // The deposit value before today's transactions
+      const totalPercentage = calculatePercentageFromAmount(baseDeposit, totalAmount, leverage);
+      
+      // Update the day entry
+      todayEntry.percentage = totalPercentage;
+      todayEntry.amount = totalAmount;
+      todayEntry.deposit = newDeposit;
+      todayEntry.transactions = transactions;
+      
+      updatedDays[todayIndex] = todayEntry;
+      
+      // Update state
+      setDays(updatedDays);
+    }
+    
+    // Update deposit and reset input fields
     setDeposit(newDeposit);
     setNewPercentage('');
     setNewAmount('');
   };
   
-  // Start editing a day
-  const startEditingDay = (index) => {
-    const day = days[index];
-    setEditingDayIndex(index);
+  // Start editing a day transaction
+  const startEditingDay = (dayIndex, transactionIndex = null) => {
+    const day = days[dayIndex];
+    setEditingDayIndex(dayIndex);
     
-    if (inputMode === 'percentage') {
-      setNewPercentage(day.percentage.toString());
+    // If transaction index is provided, edit that specific transaction
+    if (transactionIndex !== null && day.transactions && day.transactions.length > transactionIndex) {
+      setEditingTransactionIndex(transactionIndex);
+      const transaction = day.transactions[transactionIndex];
+      
+      if (inputMode === 'percentage') {
+        setNewPercentage(transaction.percentage.toString());
+      } else {
+        setNewAmount(transaction.amount.toString());
+      }
     } else {
-      setNewAmount(day.amount.toString());
+      // Otherwise edit the whole day (last transaction or day total)
+      setEditingTransactionIndex(null);
+      
+      if (inputMode === 'percentage') {
+        setNewPercentage(day.percentage.toString());
+      } else {
+        setNewAmount(day.amount.toString());
+      }
     }
   };
   
-  // Save edited day
+  // Save edited day transaction
   const saveEditedDay = () => {
     if (editingDayIndex === null) return;
     
@@ -159,33 +213,117 @@ const DepositTracker = () => {
     
     // Get the day being edited
     const editedDay = days[editingDayIndex];
+    const updatedDays = [...days];
+    let updatedDay = { ...editedDay };
     
-    // Calculate new amount and percentage
+    // Calculate new amount and percentage for this transaction
     let newPercentageValue, newAmountValue;
     
     if (inputMode === 'percentage') {
       newPercentageValue = parseFloat(newPercentage);
-      newAmountValue = calculateAmountFromPercentage(editedDay.deposit - editedDay.amount, newPercentageValue, leverage);
+      
+      // If editing a specific transaction, calculate based on the deposit before this transaction
+      if (editingTransactionIndex !== null && updatedDay.transactions) {
+        const prevDeposit = editingTransactionIndex === 0 
+          ? updatedDay.deposit - updatedDay.amount // First transaction of the day
+          : updatedDay.deposit - updatedDay.transactions.reduce((sum, t, idx) => 
+              idx >= editingTransactionIndex ? sum : sum + t.amount, 0);
+              
+        // Calculate amount based on percentage of deposit, then apply leverage
+        newAmountValue = calculateAmountFromPercentage(prevDeposit, newPercentageValue, leverage);
+      } else {
+        // Editing the whole day
+        // Calculate amount based on percentage of deposit before any transaction today
+        const baseDeposit = editedDay.deposit - editedDay.amount;
+        newAmountValue = calculateAmountFromPercentage(baseDeposit, newPercentageValue, leverage);
+      }
     } else {
       newAmountValue = parseFloat(newAmount);
-      newPercentageValue = calculatePercentageFromAmount(editedDay.deposit - newAmountValue, newAmountValue, leverage);
+      
+      // If editing a specific transaction, calculate based on the deposit before this transaction
+      if (editingTransactionIndex !== null && updatedDay.transactions) {
+        const prevDeposit = editingTransactionIndex === 0 
+          ? updatedDay.deposit - updatedDay.amount // First transaction of the day
+          : updatedDay.deposit - updatedDay.transactions.reduce((sum, t, idx) => 
+              idx >= editingTransactionIndex ? sum : sum + t.amount, 0);
+              
+        // Calculate percentage by first dividing amount by leverage
+        newPercentageValue = calculatePercentageFromAmount(prevDeposit, newAmountValue, leverage);
+      } else {
+        // Editing the whole day
+        // Calculate percentage from amount/leverage relative to deposit before transaction
+        const baseDeposit = editedDay.deposit - editedDay.amount;
+        newPercentageValue = calculatePercentageFromAmount(baseDeposit, newAmountValue, leverage);
+      }
     }
     
-    // Calculate difference in amount
-    const amountDifference = newAmountValue - editedDay.amount;
+    // Calculate the amount difference to update deposits
+    let amountDifference = 0;
     
-    // Create updated day
-    const updatedDay = {
-      ...editedDay,
-      percentage: newPercentageValue,
-      amount: newAmountValue,
-      deposit: editedDay.deposit + amountDifference
-    };
+    // Update the transactions array if it exists
+    if (updatedDay.transactions && updatedDay.transactions.length > 0) {
+      const updatedTransactions = [...updatedDay.transactions];
+      
+      if (editingTransactionIndex !== null) {
+        // Editing a specific transaction
+        const oldAmount = updatedTransactions[editingTransactionIndex].amount;
+        amountDifference = newAmountValue - oldAmount;
+        
+        updatedTransactions[editingTransactionIndex] = {
+          ...updatedTransactions[editingTransactionIndex],
+          percentage: newPercentageValue,
+          amount: newAmountValue,
+          timestamp: new Date().toISOString() // Update timestamp to show it was edited
+        };
+      } else {
+        // Editing the whole day - create a new single transaction with the total amount
+        const oldTotalAmount = updatedDay.amount;
+        amountDifference = newAmountValue - oldTotalAmount;
+        
+        // Replace all transactions with a single one
+        updatedTransactions.length = 0; // Clear the array
+        updatedTransactions.push({
+          percentage: newPercentageValue,
+          amount: newAmountValue,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      // Recalculate total day values
+      const totalAmount = updatedTransactions.reduce((sum, t) => sum + t.amount, 0);
+      
+      // Calculate the overall day percentage based on the total amount relative to the starting deposit
+      const baseDeposit = editedDay.deposit - editedDay.amount; // The deposit value before today's transactions
+      const totalPercentage = calculatePercentageFromAmount(baseDeposit, totalAmount, leverage);
+      
+      updatedDay = {
+        ...updatedDay,
+        percentage: totalPercentage,
+        amount: totalAmount,
+        deposit: editedDay.deposit + amountDifference,
+        transactions: updatedTransactions
+      };
+    } else {
+      // No transactions array - update the day directly
+      amountDifference = newAmountValue - editedDay.amount;
+      
+      updatedDay = {
+        ...updatedDay,
+        percentage: newPercentageValue,
+        amount: newAmountValue,
+        deposit: editedDay.deposit + amountDifference,
+        transactions: [{
+          percentage: newPercentageValue,
+          amount: newAmountValue,
+          timestamp: new Date().toISOString()
+        }]
+      };
+    }
     
-    // Update following days' deposits
-    const updatedDays = [...days];
+    // Update the day in the array
     updatedDays[editingDayIndex] = updatedDay;
     
+    // Update deposits in following days
     for (let i = editingDayIndex + 1; i < days.length; i++) {
       updatedDays[i] = {
         ...updatedDays[i],
@@ -197,6 +335,7 @@ const DepositTracker = () => {
     setDays(updatedDays);
     setDeposit(deposit + amountDifference);
     setEditingDayIndex(null);
+    setEditingTransactionIndex(null);
     setNewPercentage('');
     setNewAmount('');
   };
@@ -204,6 +343,7 @@ const DepositTracker = () => {
   // Cancel editing
   const cancelEditing = () => {
     setEditingDayIndex(null);
+    setEditingTransactionIndex(null);
     setNewPercentage('');
     setNewAmount('');
   };
@@ -266,6 +406,90 @@ const DepositTracker = () => {
       
       setDays(updatedDays);
       setDeposit(deposit - deletedDay.amount);
+    }
+  };
+  
+  // Archive a single transaction
+  const archiveTransaction = async (dayIndex, transactionIndex) => {
+    const day = days[dayIndex];
+    
+    // If there's only one transaction, archive the whole day
+    if (!day.transactions || day.transactions.length <= 1) {
+      archiveDay(dayIndex);
+      return;
+    }
+    
+    const transaction = day.transactions[transactionIndex];
+    const result = await dialog.createPromiseDialog(
+      'Архивация сделки',
+      `Вы уверены, что хотите архивировать сделку #${transactionIndex + 1} (${transaction.percentage.toFixed(2)}%) за ${day.date}?`,
+      ['Да', 'Нет']
+    );
+    
+    if (result === 'Да') {
+      // Create a copy of the day with only this transaction
+      const transactionToArchive = {
+        ...day,
+        transactions: [transaction],
+        amount: transaction.amount,
+        percentage: transaction.percentage
+      };
+      
+      // Add to archive
+      setArchivedDays([...archivedDays, transactionToArchive]);
+      
+      // Remove the transaction from the day
+      const updatedDays = [...days];
+      const updatedDay = { ...day };
+      const updatedTransactions = [...day.transactions];
+      
+      // Get the amount of the transaction to remove
+      const amountToRemove = transaction.amount;
+      
+      // Remove the transaction
+      updatedTransactions.splice(transactionIndex, 1);
+      
+      // If no transactions left, remove the day
+      if (updatedTransactions.length === 0) {
+        updatedDays.splice(dayIndex, 1);
+        
+        // Update day numbers
+        updatedDays.forEach((d, i) => {
+          d.day = i + 1;
+        });
+        
+        // Update deposits in following days
+        for (let i = dayIndex; i < updatedDays.length; i++) {
+          updatedDays[i].deposit = updatedDays[i].deposit - amountToRemove;
+        }
+        
+        setDays(updatedDays);
+        setDeposit(deposit - amountToRemove);
+        return;
+      }
+      
+      // If there are transactions left, recalculate the day's total
+      const totalAmount = updatedTransactions.reduce((sum, t) => sum + t.amount, 0);
+      
+      // Calculate the overall day percentage
+      const baseDeposit = day.deposit - day.amount; // Deposit before all transactions of the day
+      const totalPercentage = calculatePercentageFromAmount(baseDeposit, totalAmount, leverage);
+      
+      // Update the day
+      updatedDay.transactions = updatedTransactions;
+      updatedDay.amount = totalAmount;
+      updatedDay.percentage = totalPercentage;
+      updatedDay.deposit = updatedDay.deposit - amountToRemove;
+      
+      updatedDays[dayIndex] = updatedDay;
+      
+      // Update deposits in following days
+      for (let i = dayIndex + 1; i < updatedDays.length; i++) {
+        updatedDays[i].deposit = updatedDays[i].deposit - amountToRemove;
+      }
+      
+      setDays(updatedDays);
+      setDeposit(deposit - amountToRemove);
     }
   };
   
@@ -674,6 +898,7 @@ const DepositTracker = () => {
             handleAmountChange={handleAmountChange}
             addDay={addDay}
             editingDayIndex={editingDayIndex}
+            editingTransactionIndex={editingTransactionIndex}
             saveEditedDay={saveEditedDay}
             cancelEditing={cancelEditing}
           />
@@ -686,6 +911,7 @@ const DepositTracker = () => {
             leverage={leverage}
             startEditingDay={startEditingDay}
             archiveDay={archiveDay}
+            archiveTransaction={archiveTransaction}
             deleteDay={deleteDay}
             initialDeposit={initialDeposit}
             deposit={deposit}

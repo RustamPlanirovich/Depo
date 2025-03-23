@@ -160,10 +160,24 @@ const Archive = ({
                 {sortedArchivedDays.map((day, index) => (
                   <tr key={index} className="hover:bg-gray-700">
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm text-white">{day.day}</div>
+                      <div className="flex items-center">
+                        <div className="text-sm text-white">{day.day}</div>
+                        {day.transactions && day.transactions.length === 1 && day.transactions[0].timestamp && (
+                          <div className="ml-2 px-2 py-0.5 bg-blue-900 rounded text-blue-300 text-xs">
+                            Сделка
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm text-white">{day.date}</div>
+                      <div className="text-sm text-white">
+                        {day.date}
+                        {day.transactions && day.transactions.length === 1 && day.transactions[0].timestamp && (
+                          <div className="text-xs text-gray-400 mt-1">
+                            {new Date(day.transactions[0].timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className={`text-sm font-medium ${day.percentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>

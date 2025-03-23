@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #1a202c;
+  color: #fff;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Progress bar color customization */
+.progress-bar-positive {
+  @apply bg-green-500;
+}
+
+.progress-bar-negative {
+  @apply bg-red-500;
+}
+
+/* Transition utilities */
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+.transition-height {
+  transition: max-height 0.3s ease;
+}
+
+/* Form controls */
+.input-control {
+  @apply bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+}
+
+.button-primary {
+  @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors;
+}
+
+.button-secondary {
+  @apply bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition-colors;
+}
+
+.button-danger {
+  @apply bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors;
+}
+
+/* Table styles */
+.table-container {
+  @apply overflow-x-auto rounded-lg border border-gray-700;
+}
+
+.table {
+  @apply min-w-full divide-y divide-gray-700;
+}
+
+.table th {
+  @apply px-4 py-3 bg-gray-800 text-left text-xs font-medium text-gray-300 uppercase tracking-wider;
+}
+
+.table td {
+  @apply px-4 py-3 whitespace-nowrap;
+}
+
+.table tr {
+  @apply bg-gray-800;
+}
+
+.table tbody tr:nth-child(odd) {
+  @apply bg-gray-900;
+}
+
+.table tbody tr:hover {
+  @apply bg-gray-700;
+} 

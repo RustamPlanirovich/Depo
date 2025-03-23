@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import './App.css';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -46,6 +49,15 @@ const DepositTracker = () => {
   const [editingGoalIndex, setEditingGoalIndex] = useState(null);
   const [activeSection, setActiveSection] = useState('dashboard'); // Новый state для активного раздела
   const [mobileNavOpen, setMobileNavOpen] = useState(false); // State for mobile navigation
+  // Time-limited goal settings
+  const [newGoalTimeLimit, setNewGoalTimeLimit] = useState(false);
+  const [newGoalDuration, setNewGoalDuration] = useState(30);
+  const [newGoalDurationType, setNewGoalDurationType] = useState('days');
+  const [newGoalDeadline, setNewGoalDeadline] = useState('');
+  // Daily profit goal settings
+  const [newGoalDailyTarget, setNewGoalDailyTarget] = useState(dailyTarget);
+  // Consecutive wins goal settings
+  const [newGoalConsecutiveWins, setNewGoalConsecutiveWins] = useState(5);
 
   // Загрузка данных из localStorage при инициализации
   useEffect(() => {
@@ -896,6 +908,39 @@ const DepositTracker = () => {
       completed: false
     };
     
+    // Add time limit properties if enabled
+    if (newGoalTimeLimit) {
+      if (newGoalDeadline) {
+        // Use specific deadline date
+        newGoal.deadline = newGoalDeadline;
+      } else {
+        // Calculate deadline based on duration
+        const deadline = new Date();
+        switch (newGoalDurationType) {
+          case 'days':
+            deadline.setDate(deadline.getDate() + newGoalDuration);
+            break;
+          case 'weeks':
+            deadline.setDate(deadline.getDate() + newGoalDuration * 7);
+            break;
+          case 'months':
+            deadline.setMonth(deadline.getMonth() + newGoalDuration);
+            break;
+          default:
+            deadline.setDate(deadline.getDate() + newGoalDuration);
+        }
+        newGoal.deadline = deadline.toISOString();
+      }
+      newGoal.timeLimit = true;
+    }
+    
+    // Add properties for specific goal types
+    if (newGoalType === 'daily_target') {
+      newGoal.dailyTarget = newGoalDailyTarget;
+    } else if (newGoalType === 'consecutive_wins') {
+      newGoal.consecutiveWins = newGoalConsecutiveWins;
+    }
+    
     if (editingGoalIndex !== null) {
       // Редактируем существующую цель
       const updatedGoals = [...goals];
@@ -911,6 +956,12 @@ const DepositTracker = () => {
     setNewGoalType('deposit');
     setNewGoalValue('');
     setNewGoalName('');
+    setNewGoalTimeLimit(false);
+    setNewGoalDuration(30);
+    setNewGoalDurationType('days');
+    setNewGoalDeadline('');
+    setNewGoalDailyTarget(dailyTarget);
+    setNewGoalConsecutiveWins(5);
     setShowGoalForm(false);
   };
 
@@ -920,6 +971,34 @@ const DepositTracker = () => {
     setNewGoalType(goal.type);
     setNewGoalValue(goal.value.toString());
     setNewGoalName(goal.name);
+    
+    // Set time limit properties if present
+    if (goal.timeLimit) {
+      setNewGoalTimeLimit(true);
+      if (goal.deadline) {
+        // If goal has a specific deadline date
+        setNewGoalDeadline(goal.deadline.split('T')[0]); // Extract just the date part
+      }
+    } else {
+      setNewGoalTimeLimit(false);
+      setNewGoalDuration(30);
+      setNewGoalDurationType('days');
+      setNewGoalDeadline('');
+    }
+    
+    // Set properties for specific goal types
+    if (goal.type === 'daily_target' && goal.dailyTarget) {
+      setNewGoalDailyTarget(goal.dailyTarget);
+    } else {
+      setNewGoalDailyTarget(dailyTarget);
+    }
+    
+    if (goal.type === 'consecutive_wins' && goal.consecutiveWins) {
+      setNewGoalConsecutiveWins(goal.consecutiveWins);
+    } else {
+      setNewGoalConsecutiveWins(5);
+    }
+    
     setEditingGoalIndex(index);
     setShowGoalForm(true);
   };
@@ -949,15 +1028,77 @@ const DepositTracker = () => {
 
   // Функция для расчета прогресса цели
   const calculateGoalProgress = (goal) => {
+    // Calculate base progress based on goal type
+    let progress = 0;
+    
     if (goal.type === 'deposit') {
       // Прогресс для цели по депозиту
-      return Math.min(100, (deposit / goal.value) * 100);
+      progress = Math.min(100, (deposit / goal.value) * 100);
     } else if (goal.type === 'percentage') {
       // Прогресс для цели по процентному росту
       const percentageGrowth = ((deposit / initialDeposit) - 1) * 100;
-      return Math.min(100, (percentageGrowth / goal.value) * 100);
+      progress = Math.min(100, (percentageGrowth / goal.value) * 100);
+    } else if (goal.type === 'consecutive_wins') {
+      // Progress for consecutive wins goals
+      if (days.length === 0) return 0;
+      
+      let currentStreak = 0;
+      const sortedDays = [...days].sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      for (const day of sortedDays) {
+        if (day.percentage > 0) {
+          currentStreak++;
+        } else {
+          break;
+        }
+      }
+      
+      progress = Math.min(100, (currentStreak / goal.consecutiveWins) * 100);
+    } else if (goal.type === 'daily_target') {
+      // Progress for achieving daily target
+      if (days.length === 0) return 0;
+      
+      const totalDays = days.length;
+      const daysAboveTarget = days.filter(day => day.percentage >= goal.dailyTarget).length;
+      progress = Math.min(100, (daysAboveTarget / totalDays) * 100);
     }
-    return 0;
+    
+    // Adjust progress if there's a time limit
+    if (goal.timeLimit && goal.deadline) {
+      const now = new Date();
+      const deadline = new Date(goal.deadline);
+      const createdAt = new Date(goal.createdAt);
+      
+      // If deadline has passed and goal is not complete, show 0%
+      if (now > deadline && progress < 100) {
+        return 0;
+      }
+      
+      // Calculate time progress (what percentage of time has passed)
+      const totalTime = deadline - createdAt;
+      const timeElapsed = now - createdAt;
+      const timeProgress = Math.min(100, (timeElapsed / totalTime) * 100);
+      
+      // For time-limited goals, we want to show a good progress
+      // if the person is ahead of schedule, so we compare
+      // actual progress with time progress
+      if (progress > timeProgress) {
+        // Ahead of schedule - return actual progress
+        return progress;
+      } else {
+        // Behind schedule - adjust progress based on remaining time
+        const remainingTime = deadline - now;
+        if (remainingTime <= 0) return 0;
+        
+        const remainingPercentage = 100 - progress;
+        const urgencyFactor = Math.max(0, 1 - (remainingTime / totalTime));
+        
+        // Apply urgency factor to reduce progress when deadline approaches
+        return Math.max(0, progress * (1 - urgencyFactor * 0.5));
+      }
+    }
+    
+    return progress;
   };
 
   // Функция для проверки достижения целей
@@ -976,6 +1117,44 @@ const DepositTracker = () => {
         if (percentageGrowth >= goal.value) {
           achieved = true;
         }
+      } else if (goal.type === 'consecutive_wins') {
+        // Check consecutive wins
+        let currentStreak = 0;
+        const sortedDays = [...days].sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        for (const day of sortedDays) {
+          if (day.percentage > 0) {
+            currentStreak++;
+            if (currentStreak >= goal.consecutiveWins) {
+              achieved = true;
+              break;
+            }
+          } else {
+            break;
+          }
+        }
+      } else if (goal.type === 'daily_target') {
+        // We don't automatically mark daily target goals as achieved
+        // since they're based on ratio of days meeting target
+      }
+      
+      // Check time limit - if deadline passed and goal not achieved,
+      // mark it as failed
+      if (goal.timeLimit && goal.deadline) {
+        const now = new Date();
+        const deadline = new Date(goal.deadline);
+        
+        if (now > deadline && !achieved) {
+          const updatedGoals = [...goals];
+          updatedGoals[index] = {
+            ...updatedGoals[index],
+            failed: true,
+            failedAt: new Date().toISOString()
+          };
+          setGoals(updatedGoals);
+          
+          return; // Skip marking as completed
+        }
       }
       
       if (achieved) {
@@ -990,6 +1169,12 @@ const DepositTracker = () => {
     setNewGoalType('deposit');
     setNewGoalValue('');
     setNewGoalName('');
+    setNewGoalTimeLimit(false);
+    setNewGoalDuration(30);
+    setNewGoalDurationType('days');
+    setNewGoalDeadline('');
+    setNewGoalDailyTarget(dailyTarget);
+    setNewGoalConsecutiveWins(5);
     setShowGoalForm(false);
   };
 
@@ -1195,6 +1380,20 @@ const DepositTracker = () => {
             deposit={deposit}
             initialDeposit={initialDeposit}
             days={days}
+            newGoalTimeLimit={newGoalTimeLimit}
+            setNewGoalTimeLimit={setNewGoalTimeLimit}
+            newGoalDuration={newGoalDuration}
+            setNewGoalDuration={setNewGoalDuration}
+            newGoalDurationType={newGoalDurationType}
+            setNewGoalDurationType={setNewGoalDurationType}
+            newGoalDeadline={newGoalDeadline}
+            setNewGoalDeadline={setNewGoalDeadline}
+            newGoalDailyTarget={newGoalDailyTarget}
+            setNewGoalDailyTarget={setNewGoalDailyTarget}
+            newGoalConsecutiveWins={newGoalConsecutiveWins}
+            setNewGoalConsecutiveWins={setNewGoalConsecutiveWins}
+            dailyTarget={dailyTarget}
+            markGoalAsCompleted={markGoalAsCompleted}
           />
         )}
         
@@ -1535,8 +1734,236 @@ const GoalsSection = ({
   calculateGoalProgress,
   deposit,
   initialDeposit,
-  days
+  days,
+  // New props
+  newGoalTimeLimit,
+  setNewGoalTimeLimit,
+  newGoalDuration,
+  setNewGoalDuration,
+  newGoalDurationType,
+  setNewGoalDurationType,
+  newGoalDeadline,
+  setNewGoalDeadline,
+  newGoalDailyTarget,
+  setNewGoalDailyTarget,
+  newGoalConsecutiveWins,
+  setNewGoalConsecutiveWins,
+  dailyTarget,
+  markGoalAsCompleted
 }) => {
+  // GoalCalendar Component
+  const GoalCalendar = ({ goals }) => {
+    const [date, setDate] = useState(new Date());
+    const [tooltipContent, setTooltipContent] = useState(null);
+    const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [showGoalModal, setShowGoalModal] = useState(false);
+    const [goalsForSelectedDate, setGoalsForSelectedDate] = useState([]);
+    
+    // Filter goals that have a deadline
+    const goalsWithDeadlines = goals.filter(goal => goal.timeLimit && goal.deadline);
+    
+    // Function to get goal classes for a specific date
+    const getTileClassName = ({ date, view }) => {
+      // Only for month view
+      if (view !== 'month') return null;
+      
+      // Check if any goals have this date as a deadline
+      const hasGoalDeadline = goalsWithDeadlines.some(goal => {
+        const deadlineDate = new Date(goal.deadline);
+        return (
+          date.getDate() === deadlineDate.getDate() &&
+          date.getMonth() === deadlineDate.getMonth() &&
+          date.getFullYear() === deadlineDate.getFullYear()
+        );
+      });
+      
+      return hasGoalDeadline ? 'goal-deadline-date' : null;
+    };
+    
+    // Function to get content for a specific date
+    const getTileContent = ({ date, view }) => {
+      // Only for month view
+      if (view !== 'month') return null;
+      
+      // Find goals that have this date as a deadline
+      const goalsForDate = goalsWithDeadlines.filter(goal => {
+        const deadlineDate = new Date(goal.deadline);
+        return (
+          date.getDate() === deadlineDate.getDate() &&
+          date.getMonth() === deadlineDate.getMonth() &&
+          date.getFullYear() === deadlineDate.getFullYear()
+        );
+      });
+      
+      if (goalsForDate.length === 0) return null;
+      
+      // Display an indicator for each goal
+      return (
+        <div className="goal-indicators">
+          {goalsForDate.map((goal, index) => (
+            <div 
+              key={index} 
+              className={`goal-indicator ${
+                goal.completed ? 'bg-green-500' : 
+                goal.failed ? 'bg-red-500' : 
+                'bg-blue-500'
+              }`}
+              title={goal.name}
+              onMouseEnter={(e) => {
+                setTooltipContent(goal.name);
+                setTooltipPosition({ 
+                  x: e.clientX, 
+                  y: e.clientY 
+                });
+              }}
+              onMouseLeave={() => setTooltipContent(null)}
+            />
+          ))}
+        </div>
+      );
+    };
+    
+    // Handle date click to show goals or create a new goal
+    const handleDateClick = (value) => {
+      // Format date as YYYY-MM-DD for the input
+      const formattedDate = value.toISOString().split('T')[0];
+      
+      // Find goals for this date
+      const goalsForDate = goalsWithDeadlines.filter(goal => {
+        const deadlineDate = new Date(goal.deadline);
+        return (
+          value.getDate() === deadlineDate.getDate() &&
+          value.getMonth() === deadlineDate.getMonth() &&
+          value.getFullYear() === deadlineDate.getFullYear()
+        );
+      });
+      
+      // If there are goals for this date, show them
+      if (goalsForDate.length > 0) {
+        setSelectedDate(formattedDate);
+        setGoalsForSelectedDate(goalsForDate);
+        setShowGoalModal(true);
+      } else {
+        // Otherwise, set up the form for adding a new goal with this date as the deadline
+        setNewGoalTimeLimit(true);
+        setNewGoalDeadline(formattedDate);
+        setShowGoalForm(true);
+      }
+      
+      // Update the calendar selected date
+      setDate(value);
+    };
+    
+    // Function to create a new goal with the selected date
+    const handleCreateGoal = () => {
+      setShowGoalModal(false);
+      setNewGoalTimeLimit(true);
+      setNewGoalDeadline(selectedDate);
+      setShowGoalForm(true);
+    };
+    
+    return (
+      <div className="calendar-container bg-gray-800 p-5 rounded border border-gray-700">
+        <h2 className="text-lg font-medium mb-4 text-blue-300">Календарь целей</h2>
+        <div className="mb-2 text-sm text-gray-400">
+          <p>Цвета индикаторов:</p>
+          <div className="flex items-center mt-1">
+            <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+            <span>Активная цель</span>
+          </div>
+          <div className="flex items-center mt-1">
+            <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+            <span>Достигнутая цель</span>
+          </div>
+          <div className="flex items-center mt-1">
+            <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+            <span>Просроченная цель</span>
+          </div>
+        </div>
+        <div className="mb-3 text-sm text-gray-300">
+          Нажмите на дату, чтобы просмотреть цели или создать новую
+        </div>
+        <Calendar 
+          onChange={handleDateClick}
+          value={date}
+          tileClassName={getTileClassName}
+          tileContent={getTileContent}
+          minDate={new Date()}
+        />
+        {tooltipContent && (
+          <div 
+            className="tooltip absolute bg-gray-900 text-white p-2 rounded shadow-md text-sm z-10"
+            style={{
+              top: tooltipPosition.y + 10,
+              left: tooltipPosition.x - 100,
+            }}
+          >
+            {tooltipContent}
+          </div>
+        )}
+        
+        {/* Modal for displaying goals for a selected date */}
+        {showGoalModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 p-6 rounded-lg shadow-lg max-w-lg w-full mx-4">
+              <h3 className="text-xl font-medium mb-4 text-blue-300">
+                Цели на {new Date(selectedDate).toLocaleDateString()}
+              </h3>
+              
+              <div className="max-h-60 overflow-y-auto">
+                {goalsForSelectedDate.map((goal, index) => (
+                  <div 
+                    key={index}
+                    className={`p-3 mb-2 rounded ${
+                      goal.completed ? 'bg-green-900 bg-opacity-20 border border-green-500' : 
+                      goal.failed ? 'bg-red-900 bg-opacity-20 border border-red-500' : 
+                      'bg-gray-700'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <h4 className="font-medium">{goal.name}</h4>
+                      <span className={`px-2 py-1 text-xs rounded ${
+                        goal.completed ? 'bg-green-600' : 
+                        goal.failed ? 'bg-red-600' : 
+                        'bg-blue-600'
+                      }`}>
+                        {goal.completed ? 'Достигнуто' : goal.failed ? 'Просрочено' : 'В процессе'}
+                      </span>
+                    </div>
+                    
+                    <p className="text-sm text-gray-300 mt-1">
+                      {goal.type === 'deposit' && `Цель: достичь $${parseFloat(goal.value).toFixed(2)}`}
+                      {goal.type === 'percentage' && `Цель: вырасти на ${parseFloat(goal.value).toFixed(2)}%`}
+                      {goal.type === 'consecutive_wins' && `Цель: серия из ${goal.consecutiveWins} прибыльных дней подряд`}
+                      {goal.type === 'daily_target' && `Цель: достигать ${parseFloat(goal.dailyTarget).toFixed(2)}% в день`}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex justify-between mt-4">
+                <button
+                  onClick={() => setShowGoalModal(false)}
+                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded"
+                >
+                  Закрыть
+                </button>
+                
+                <button
+                  onClick={handleCreateGoal}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-white"
+                >
+                  Добавить цель на эту дату
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+  
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -1556,7 +1983,7 @@ const GoalsSection = ({
             {editingGoalIndex !== null ? 'Редактировать цель' : 'Новая цель'}
           </h2>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 gap-5">
             <div>
               <label className="block mb-2">Название цели:</label>
               <input
@@ -1570,40 +1997,185 @@ const GoalsSection = ({
             
             <div>
               <label className="block mb-2">Тип цели:</label>
-              <div className="flex space-x-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                 <button 
                   onClick={() => setNewGoalType('deposit')}
-                  className={`px-4 py-3 rounded flex-1 ${newGoalType === 'deposit' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                  className={`px-4 py-3 rounded ${newGoalType === 'deposit' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
                 >
                   Сумма депозита
                 </button>
                 <button 
                   onClick={() => setNewGoalType('percentage')}
-                  className={`px-4 py-3 rounded flex-1 ${newGoalType === 'percentage' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                  className={`px-4 py-3 rounded ${newGoalType === 'percentage' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
                 >
                   Процент роста
+                </button>
+                <button 
+                  onClick={() => setNewGoalType('consecutive_wins')}
+                  className={`px-4 py-3 rounded ${newGoalType === 'consecutive_wins' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                >
+                  Серия прибыльных дней
+                </button>
+                <button 
+                  onClick={() => setNewGoalType('daily_target')}
+                  className={`px-4 py-3 rounded ${newGoalType === 'daily_target' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                >
+                  Достижение цели в %
                 </button>
               </div>
             </div>
             
-            <div>
-              <label className="block mb-2">
-                {newGoalType === 'deposit' ? 'Целевая сумма ($):' : 'Целевой рост (%):'}
-              </label>
-              <input
-                type="number"
-                value={newGoalValue}
-                onChange={(e) => setNewGoalValue(e.target.value)}
-                className="w-full p-3 border rounded bg-gray-700 text-white"
-                step="0.01"
-                min="0"
-              />
+            {/* Dynamic inputs based on goal type */}
+            {newGoalType === 'deposit' && (
+              <div>
+                <label className="block mb-2">Целевая сумма ($):</label>
+                <input
+                  type="number"
+                  value={newGoalValue}
+                  onChange={(e) => setNewGoalValue(e.target.value)}
+                  className="w-full p-3 border rounded bg-gray-700 text-white"
+                  step="0.01"
+                  min="0"
+                />
+              </div>
+            )}
+            
+            {newGoalType === 'percentage' && (
+              <div>
+                <label className="block mb-2">Целевой рост (%):</label>
+                <input
+                  type="number"
+                  value={newGoalValue}
+                  onChange={(e) => setNewGoalValue(e.target.value)}
+                  className="w-full p-3 border rounded bg-gray-700 text-white"
+                  step="0.01"
+                  min="0"
+                />
+              </div>
+            )}
+            
+            {newGoalType === 'consecutive_wins' && (
+              <div>
+                <label className="block mb-2">Количество последовательных прибыльных дней:</label>
+                <input
+                  type="number"
+                  value={newGoalConsecutiveWins}
+                  onChange={(e) => setNewGoalConsecutiveWins(parseInt(e.target.value) || 3)}
+                  className="w-full p-3 border rounded bg-gray-700 text-white"
+                  step="1"
+                  min="2"
+                  max="100"
+                />
+                {/* Hidden field to store the "value" */}
+                <input
+                  type="hidden"
+                  value="1"
+                  onChange={(e) => setNewGoalValue(e.target.value)}
+                />
+              </div>
+            )}
+            
+            {newGoalType === 'daily_target' && (
+              <div>
+                <label className="block mb-2">Целевой процент в день (%):</label>
+                <input
+                  type="number"
+                  value={newGoalDailyTarget}
+                  onChange={(e) => setNewGoalDailyTarget(parseFloat(e.target.value) || dailyTarget)}
+                  className="w-full p-3 border rounded bg-gray-700 text-white"
+                  step="0.01"
+                  min="0.01"
+                />
+                {/* Hidden field to store the "value" */}
+                <input
+                  type="hidden"
+                  value="1"
+                  onChange={(e) => setNewGoalValue(e.target.value)}
+                />
+              </div>
+            )}
+            
+            {/* Time Limit Options */}
+            <div className="border-t border-gray-700 pt-4 mt-2">
+              <div className="flex items-center mb-3">
+                <input
+                  type="checkbox"
+                  id="enableTimeLimit"
+                  checked={newGoalTimeLimit}
+                  onChange={(e) => setNewGoalTimeLimit(e.target.checked)}
+                  className="mr-2"
+                />
+                <label htmlFor="enableTimeLimit" className="text-green-300">Ограничить по времени</label>
+              </div>
+              
+              {newGoalTimeLimit && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block mb-2">Тип ограничения:</label>
+                    <div className="flex space-x-2">
+                      <button 
+                        onClick={() => setNewGoalDeadline('')}
+                        className={`px-4 py-2 rounded flex-1 ${!newGoalDeadline ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                      >
+                        Длительность
+                      </button>
+                      <button 
+                        onClick={() => setNewGoalDeadline(new Date().toISOString().split('T')[0])}
+                        className={`px-4 py-2 rounded flex-1 ${newGoalDeadline ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                      >
+                        Дата окончания
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {!newGoalDeadline ? (
+                    // Duration based time limit
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block mb-2">Продолжительность:</label>
+                        <input
+                          type="number"
+                          value={newGoalDuration}
+                          onChange={(e) => setNewGoalDuration(parseInt(e.target.value) || 30)}
+                          className="w-full p-3 border rounded bg-gray-700 text-white"
+                          min="1"
+                          max="365"
+                        />
+                      </div>
+                      <div>
+                        <label className="block mb-2">Единица:</label>
+                        <select
+                          value={newGoalDurationType}
+                          onChange={(e) => setNewGoalDurationType(e.target.value)}
+                          className="w-full p-3 border rounded bg-gray-700 text-white h-[50px]"
+                        >
+                          <option value="days">Дней</option>
+                          <option value="weeks">Недель</option>
+                          <option value="months">Месяцев</option>
+                        </select>
+                      </div>
+                    </div>
+                  ) : (
+                    // Specific date based time limit
+                    <div>
+                      <label className="block mb-2">Дата окончания:</label>
+                      <input
+                        type="date"
+                        value={newGoalDeadline}
+                        onChange={(e) => setNewGoalDeadline(e.target.value)}
+                        className="w-full p-3 border rounded bg-gray-700 text-white"
+                        min={new Date().toISOString().split('T')[0]}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             
-            <div className="flex items-end">
+            <div className="flex justify-end mt-2">
               <button 
                 onClick={addGoal}
-                className="bg-green-600 text-white px-5 py-3 rounded hover:bg-green-700 w-full"
+                className="bg-green-600 text-white px-5 py-3 rounded hover:bg-green-700"
               >
                 {editingGoalIndex !== null ? 'Сохранить изменения' : 'Добавить цель'}
               </button>
@@ -1623,127 +2195,149 @@ const GoalsSection = ({
         </div>
       )}
       
-      {/* List of goals */}
-      {goals.length > 0 ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {goals.map((goal, index) => {
-            const progress = calculateGoalProgress(goal);
-            const progressColor = 
-              progress < 30 ? 'bg-red-500' : 
-              progress < 70 ? 'bg-yellow-500' : 
-              'bg-green-500';
-            
-            return (
-              <div 
-                key={goal.id} 
-                className={`p-5 rounded border ${goal.completed ? 'bg-green-900 bg-opacity-30 border-green-700' : 'bg-gray-800 border-gray-700'}`}
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="text-lg font-medium">
-                      {goal.name} 
-                      {goal.completed && (
-                        <span className="ml-2 text-xs bg-green-600 text-white px-2 py-0.5 rounded">
-                          Выполнено
-                        </span>
-                      )}
-                    </h3>
-                    <p className="text-gray-300 mt-1">
-                      {goal.type === 'deposit' 
-                        ? `Цель: $${goal.value.toFixed(2)}` 
-                        : `Цель: ${goal.value.toFixed(2)}% роста`}
-                    </p>
-                    {goal.completed && (
-                      <p className="text-xs text-gray-400 mt-1">
-                        Достигнуто: {new Date(goal.completedAt).toLocaleDateString()}
-                      </p>
+      {/* Main content: Goals list and Calendar */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Goals list */}
+        <div>
+          {goals.length > 0 ? (
+            <div className="grid grid-cols-1 gap-5">
+              {goals.map((goal, index) => {
+                const progress = calculateGoalProgress(goal);
+                const isExpired = goal.timeLimit && goal.deadline && new Date(goal.deadline) < new Date();
+                
+                return (
+                  <div 
+                    key={index} 
+                    className={`bg-gray-800 p-5 rounded border ${
+                      goal.completed ? 'border-green-500' : 
+                      isExpired ? 'border-red-500' : 
+                      'border-gray-700'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-lg font-medium text-white flex items-center">
+                          {goal.name}
+                          {goal.completed && (
+                            <span className="ml-2 px-2 py-1 bg-green-600 text-xs text-white rounded">
+                              Достигнуто
+                            </span>
+                          )}
+                          {isExpired && !goal.completed && (
+                            <span className="ml-2 px-2 py-1 bg-red-600 text-xs text-white rounded">
+                              Просрочено
+                            </span>
+                          )}
+                        </h3>
+                        
+                        <div className="mt-2 text-sm">
+                          {goal.type === 'deposit' && (
+                            <p className="text-gray-300">
+                              Цель: достичь <span className="text-yellow-400">${parseFloat(goal.value).toFixed(2)}</span>
+                            </p>
+                          )}
+                          
+                          {goal.type === 'percentage' && (
+                            <p className="text-gray-300">
+                              Цель: вырасти на <span className="text-yellow-400">{parseFloat(goal.value).toFixed(2)}%</span>
+                            </p>
+                          )}
+                          
+                          {goal.type === 'consecutive_wins' && (
+                            <p className="text-gray-300">
+                              Цель: серия из <span className="text-yellow-400">{goal.consecutiveWins}</span> прибыльных дней подряд
+                            </p>
+                          )}
+                          
+                          {goal.type === 'daily_target' && (
+                            <p className="text-gray-300">
+                              Цель: достигать <span className="text-yellow-400">{parseFloat(goal.dailyTarget).toFixed(2)}%</span> в день
+                            </p>
+                          )}
+                          
+                          {/* Time limit information */}
+                          {goal.timeLimit && (
+                            <p className="text-blue-300 mt-1">
+                              {goal.deadline ? (
+                                <>Срок: до <span className="font-medium">{new Date(goal.deadline).toLocaleDateString()}</span></>
+                              ) : (
+                                <>Срок: <span className="font-medium">{goal.duration} {
+                                  goal.durationType === 'days' ? 'дней' : 
+                                  goal.durationType === 'weeks' ? 'недель' : 'месяцев'
+                                }</span></>
+                              )}
+                            </p>
+                          )}
+                          
+                          {/* Show current progress */}
+                          <p className="mt-1">
+                            Текущий прогресс: <span className="font-medium text-green-400">{progress.toFixed(2)}%</span>
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => editGoal(index)}
+                          className="text-blue-400 hover:text-blue-300"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => deleteGoal(index)}
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="w-full bg-gray-700 rounded-full h-2.5">
+                      <div
+                        className={`h-2.5 rounded-full ${
+                          goal.completed ? 'bg-green-600' : 
+                          progress >= 50 ? 'bg-blue-600' : 'bg-blue-400'
+                        }`}
+                        style={{ width: `${Math.min(100, progress)}%` }}
+                      ></div>
+                    </div>
+                    
+                    {!goal.completed && progress >= 100 && (
+                      <div className="mt-4">
+                        <button
+                          onClick={() => markGoalAsCompleted(index)}
+                          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+                        >
+                          Отметить как достигнутую
+                        </button>
+                      </div>
                     )}
                   </div>
-                  
-                  {!goal.completed && (
-                    <div className="flex space-x-2">
-                      <button 
-                        onClick={() => editGoal(index)}
-                        className="text-blue-400 hover:text-blue-300 p-1"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                        </svg>
-                      </button>
-                      <button 
-                        onClick={() => deleteGoal(index)}
-                        className="text-red-400 hover:text-red-300 p-1"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Progress bar */}
-                <div className="w-full bg-gray-900 rounded-full h-4 mb-2 overflow-hidden shadow-inner">
-                  <div 
-                    className={`h-4 rounded-full ${progressColor} transition-all duration-500 ease-out`} 
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
-                
-                <div className="flex justify-between text-sm mt-3 text-gray-300">
-                  <span className="font-medium">{progress.toFixed(1)}% выполнено</span>
-                  {goal.type === 'deposit' && (
-                    <span>${deposit.toFixed(2)} из ${goal.value.toFixed(2)}</span>
-                  )}
-                  {goal.type === 'percentage' && (
-                    <span>
-                      {((deposit / initialDeposit - 1) * 100).toFixed(1)}% из {goal.value.toFixed(1)}%
-                    </span>
-                  )}
-                </div>
-                
-                {/* Remaining time (forecast) */}
-                {!goal.completed && days.length > 0 && (
-                  <div className="mt-4 text-sm text-gray-400 bg-gray-900 p-3 rounded">
-                    <div className="flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                      </svg>
-                      {goal.type === 'deposit' && (
-                        <p>
-                          Прогноз: <span className="font-medium text-blue-300">
-                            {Math.ceil(Math.log(goal.value / deposit) / Math.log(1 + (days.reduce((sum, day) => sum + day.percentage, 0) / days.length) / 100)).toFixed(0)} дней
-                          </span> при текущем темпе
-                        </p>
-                      )}
-                      {goal.type === 'percentage' && (
-                        <p>
-                          Прогноз: <span className="font-medium text-blue-300">
-                            {Math.ceil(goal.value / (days.reduce((sum, day) => sum + day.percentage, 0) / days.length)).toFixed(0)} дней
-                          </span> при текущем темпе
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-10 bg-gray-800 rounded">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="text-lg font-medium text-gray-400">Нет активных целей</h3>
+              <p className="text-gray-500 mt-2">Добавьте новую цель, чтобы отслеживать свой прогресс</p>
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="bg-gray-800 p-6 rounded border border-gray-700 text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto mb-3 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
-          <p className="text-gray-400 mb-4">У вас пока нет финансовых целей</p>
-          <button 
-            onClick={() => setShowGoalForm(true)}
-            className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded transition duration-200"
-          >
-            Создать первую цель
-          </button>
-        </div>
-      )}
+        
+        {/* Calendar */}
+        {goals.some(goal => goal.timeLimit) && (
+          <div>
+            <GoalCalendar goals={goals} />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -1751,26 +2345,22 @@ const GoalsSection = ({
 // Archive Section Component
 const ArchiveSection = ({
   archivedDays,
-  clearArchive,
   restoreFromArchive,
   deleteFromArchive
 }) => {
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-blue-300">Архив сделок</h1>
-        {archivedDays.length > 0 && (
-          <button 
-            onClick={clearArchive}
-            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-          >
-            Очистить архив
-          </button>
-        )}
-      </div>
+      <h1 className="text-2xl font-bold mb-6 text-blue-300">Архив</h1>
       
       {archivedDays.length > 0 ? (
         <div className="bg-gray-800 p-4 rounded border border-gray-700">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <span className="text-sm text-gray-400">Всего архивных записей: </span>
+              <span className="font-bold">{archivedDays.length}</span>
+            </div>
+          </div>
+          
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -1779,59 +2369,51 @@ const ArchiveSection = ({
                   <th className="p-2 text-left">Дата</th>
                   <th className="p-2 text-left">Процент</th>
                   <th className="p-2 text-left">Прибыль</th>
-                  <th className="p-2 text-left">Архивирован</th>
+                  <th className="p-2 text-left">Депозит</th>
                   <th className="p-2 text-left">Действия</th>
                 </tr>
               </thead>
               <tbody>
-                {archivedDays.map((day, index) => {
-                  // Рассчитываем, сколько дней осталось до удаления
-                  const archiveDate = new Date(day.archiveDate);
-                  const deleteDate = new Date(archiveDate);
-                  deleteDate.setDate(deleteDate.getDate() + 7);
-                  const daysLeft = Math.ceil((deleteDate - new Date()) / (1000 * 60 * 60 * 24));
-                  
-                  return (
-                    <tr key={`archive-${index}`} className="bg-yellow-900 bg-opacity-20">
-                      <td className="p-2">{day.day}</td>
-                      <td className="p-2">{day.date}</td>
-                      <td className="p-2">{day.percentage.toFixed(2)}% {day.additionalText}</td>
-                      <td className="p-2">${day.amount.toFixed(2)}</td>
-                      <td className="p-2">
-                        {new Date(day.archiveDate).toLocaleDateString()}
-                        <div className="text-xs text-yellow-500">
-                          Удалится через {daysLeft} {daysLeft === 1 ? 'день' : daysLeft < 5 ? 'дня' : 'дней'}
-                        </div>
-                      </td>
-                      <td className="p-2">
-                        <div className="flex space-x-2">
-                          <button 
-                            onClick={() => restoreFromArchive(index)}
-                            className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 text-sm"
-                          >
-                            Восстановить
-                          </button>
-                          <button 
-                            onClick={() => deleteFromArchive(index)}
-                            className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 text-sm"
-                          >
-                            Удалить
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {archivedDays.map((day, index) => (
+                  <tr key={day.day} style={{ backgroundColor: 
+                    day.color === 'green' ? 'rgba(74, 222, 128, 0.2)' : 
+                    day.color === 'red' ? 'rgba(248, 113, 113, 0.2)' :
+                    day.color === 'purple' ? 'rgba(192, 132, 252, 0.2)' : 
+                    'rgba(125, 211, 252, 0.2)' 
+                  }}>
+                    <td className="p-2">{day.day}</td>
+                    <td className="p-2">{day.date}</td>
+                    <td className="p-2">{day.percentage.toFixed(2)}% {day.additionalText}</td>
+                    <td className="p-2">${day.amount.toFixed(2)}</td>
+                    <td className="p-2">${day.deposit.toFixed(2)}</td>
+                    <td className="p-2">
+                      <div className="flex space-x-2">
+                        <button 
+                          onClick={() => restoreFromArchive(index)}
+                          className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 text-sm"
+                        >
+                          Восстановить
+                        </button>
+                        <button 
+                          onClick={() => deleteFromArchive(index)}
+                          className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 text-sm"
+                        >
+                          Удалить
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         </div>
       ) : (
         <div className="bg-gray-800 p-6 rounded border border-gray-700 text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto mb-3 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
-          <p className="text-gray-400">Архив пуст</p>
+          <p className="text-gray-400 mb-4">У вас пока нет архивных записей</p>
         </div>
       )}
     </div>
@@ -1840,144 +2422,79 @@ const ArchiveSection = ({
 
 // Settings Section Component
 const SettingsSection = ({
-  deposit,
   leverage,
+  setLeverage,
   dailyTarget,
+  setDailyTarget,
   initialDeposit,
+  setInitialDeposit,
+  deposit,
   days,
-  updateSettings,
-  exportData,
-  importData,
-  resetData,
-  checkLocalStorage,
-  forceSaveData
+  setDays,
+  archivedDays,
+  setArchivedDays,
+  goals,
+  setGoals,
+  setActiveSection
 }) => {
+  const handleReset = () => {
+    if (window.confirm('Вы уверены, что хотите сбросить все данные?')) {
+      setLeverage(1);
+      setDailyTarget(0.5);
+      setInitialDeposit(100);
+      setDays([]);
+      setArchivedDays([]);
+      setGoals([]);
+      setActiveSection('dashboard');
+    }
+  };
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6 text-blue-300">Настройки</h1>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Basic Settings */}
-        <div className="bg-gray-800 p-5 rounded border border-gray-700">
-          <h2 className="text-lg font-medium mb-4 text-blue-300">Основные параметры</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block mb-2">Начальный депозит ($):</label>
-              <input
-                type="number"
-                value={days.length === 0 ? deposit : initialDeposit}
-                onChange={(e) => {
-                  const val = Number(e.target.value);
-                  if (days.length === 0) {
-                    updateSettings(val, leverage, dailyTarget);
-                  } else {
-                    // Показать предупреждение, что изменение не повлияет на текущий депозит
-                    alert('Изменение начального депозита не повлияет на текущий. Это нужно только для расчета прироста.');
-                    updateSettings(deposit, leverage, dailyTarget, val);
-                  }
-                }}
-                className="w-full p-3 border rounded bg-gray-700 text-white"
-              />
-              {days.length > 0 && (
-                <p className="text-xs text-gray-400 mt-1">
-                  Изменение начального депозита не повлияет на текущий. Текущий: ${deposit.toFixed(2)}
-                </p>
-              )}
-            </div>
-            
-            <div>
-              <label className="block mb-2">Плечо:</label>
-              <input
-                type="number"
-                value={leverage}
-                onChange={(e) => updateSettings(deposit, Number(e.target.value), dailyTarget)}
-                className="w-full p-3 border rounded bg-gray-700 text-white"
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                С учетом плеча: ${(deposit * leverage).toFixed(2)}
-              </p>
-            </div>
-            
-            <div>
-              <label className="block mb-2">Целевой % в день:</label>
-              <input
-                type="number"
-                value={dailyTarget}
-                onChange={(e) => updateSettings(deposit, leverage, Number(e.target.value))}
-                className="w-full p-3 border rounded bg-gray-700 text-white"
-                step="0.01"
-              />
-              {days.length > 0 && (
-                <p className="text-xs text-gray-400 mt-1">
-                  Средний % за все сделки: {(days.reduce((sum, day) => sum + day.percentage, 0) / days.length).toFixed(2)}%
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
+      <div className="bg-gray-800 p-4 rounded border border-gray-700 mb-6">
+        <h2 className="text-lg font-medium mb-4 text-blue-300">Общие настройки</h2>
         
-        {/* Import/Export */}
-        <div className="bg-gray-800 p-5 rounded border border-gray-700">
-          <h2 className="text-lg font-medium mb-4 text-blue-300">Импорт/Экспорт данных</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block mb-2">Экспорт данных:</label>
-              <button 
-                onClick={exportData}
-                className="bg-green-600 text-white px-4 py-3 rounded hover:bg-green-700 w-full"
-              >
-                Экспортировать в JSON
-              </button>
-              <p className="text-xs text-gray-400 mt-1">
-                Сохраняет все данные в JSON-файл, который можно использовать для резервного копирования или переноса на другое устройство.
-              </p>
-            </div>
-            
-            <div>
-              <label className="block mb-2">Импорт из JSON:</label>
-              <input
-                type="file"
-                accept=".json"
-                onChange={importData}
-                className="w-full p-2 bg-gray-700 text-white rounded"
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                Выберите файл JSON, ранее экспортированный из приложения.
-              </p>
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block mb-2">Плечо:</label>
+            <input
+              type="number"
+              value={leverage}
+              onChange={(e) => setLeverage(parseFloat(e.target.value) || 1)}
+              className="w-full p-3 border rounded bg-gray-700 text-white"
+              step="0.01"
+              min="1"
+            />
+          </div>
+          <div>
+            <label className="block mb-2">Целевой процент в день (%):</label>
+            <input
+              type="number"
+              value={dailyTarget}
+              onChange={(e) => setDailyTarget(parseFloat(e.target.value) || 0.5)}
+              className="w-full p-3 border rounded bg-gray-700 text-white"
+              step="0.01"
+              min="0.01"
+            />
           </div>
         </div>
+      </div>
+      
+      <div className="bg-gray-800 p-4 rounded border border-gray-700 mb-6">
+        <h2 className="text-lg font-medium mb-4 text-blue-300">Сброс данных</h2>
         
-        {/* Data Management */}
-        <div className="bg-gray-800 p-5 rounded border border-gray-700 lg:col-span-2">
-          <h2 className="text-lg font-medium mb-4 text-red-400">Управление данными</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <button 
-              onClick={resetData}
-              className="bg-red-600 text-white px-4 py-3 rounded hover:bg-red-700"
-            >
-              Сбросить все данные
-            </button>
-            <button 
-              onClick={checkLocalStorage}
-              className="bg-blue-600 text-white px-4 py-3 rounded hover:bg-blue-700"
-            >
-              Проверить localStorage
-            </button>
-            <button 
-              onClick={forceSaveData}
-              className="bg-green-600 text-white px-4 py-3 rounded hover:bg-green-700"
-            >
-              Принудительное сохранение
-            </button>
-          </div>
-          <p className="text-xs text-gray-400 mt-2">
-            Внимание: сброс данных удалит все сделки, цели и настройки без возможности восстановления.
-          </p>
-        </div>
+        <p className="text-gray-400 mb-4">
+          Это действие удалит все ваши данные, включая сделки, архивные записи и цели.
+        </p>
+        
+        <button
+          onClick={handleReset}
+          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+        >
+          Сбросить все данные
+        </button>
       </div>
     </div>
   );
@@ -1986,838 +2503,42 @@ const SettingsSection = ({
 // Analytics Section Component
 const AnalyticsSection = ({
   days,
-  archivedDays,
-  leverage,
   initialDeposit,
   deposit,
-  dailyTarget
+  leverage,
+  dailyTarget,
+  goals,
+  archivedDays,
+  includeArchived,
+  setIncludeArchived,
+  timeRange,
+  setTimeRange
 }) => {
-  const [timeRange, setTimeRange] = useState('all'); // 'all', 'month', 'week', 'custom'
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [filteredDays, setFilteredDays] = useState([]);
-  const [showArchivedData, setShowArchivedData] = useState(false);
-  const [comparisonPeriod, setComparisonPeriod] = useState(null); // null, 'previous', 'custom'
-  const [benchmarkTarget, setBenchmarkTarget] = useState(dailyTarget);
-  
-  // Filter days based on selected time range
-  useEffect(() => {
-    let filtered = [...days];
-    
-    if (showArchivedData) {
-      // Add archived days to the analysis, excluding the archiveDate property
-      const processedArchivedDays = archivedDays.map(day => {
-        const { archiveDate, ...rest } = day;
-        return rest;
-      });
-      
-      filtered = [...filtered, ...processedArchivedDays];
-      
-      // Sort all days by date and renumber them
-      filtered.sort((a, b) => {
-        const dateComparison = new Date(a.date) - new Date(b.date);
-        if (dateComparison !== 0) return dateComparison;
-        return a.percentage - b.percentage;
-      });
-    }
-    
-    // Apply time range filter
-    const now = new Date();
-    
-    if (timeRange === 'month') {
-      const oneMonthAgo = new Date();
-      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-      filtered = filtered.filter(day => new Date(day.date) >= oneMonthAgo);
-    } else if (timeRange === 'week') {
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      filtered = filtered.filter(day => new Date(day.date) >= oneWeekAgo);
-    } else if (timeRange === 'custom' && startDate) {
-      const start = new Date(startDate);
-      
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setDate(end.getDate() + 1); // Include the end date
-        filtered = filtered.filter(day => {
-          const date = new Date(day.date);
-          return date >= start && date < end;
-        });
-      } else {
-        filtered = filtered.filter(day => new Date(day.date) >= start);
-      }
-    }
-    
-    setFilteredDays(filtered);
-  }, [days, archivedDays, timeRange, startDate, endDate, showArchivedData]);
-  
+  const [selectedTimeRange, setSelectedTimeRange] = useState('all');
+
+  const handleTimeRangeChange = (e) => {
+    setSelectedTimeRange(e.target.value);
+    setTimeRange(e.target.value);
+  };
+
+  const calculateTotalGrowthPercentage = () => {
+    if (days.length === 0) return 0;
+    const lastDeposit = days[days.length - 1].deposit;
+    return ((lastDeposit / initialDeposit - 1) * 100).toFixed(2);
+  };
+
+  const calculateAverageDailyPercentage = () => {
+    if (days.length === 0) return 0;
+    const totalPercentage = days.reduce((sum, day) => sum + day.percentage, 0);
+    return (totalPercentage / days.length).toFixed(2);
+  };
+
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6 text-blue-300">Аналитика</h1>
-      
-      {/* Filters and Controls */}
-      <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700 mb-4 sm:mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div>
-            <label className="block mb-2 text-sm">Период времени:</label>
-            <select 
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value)}
-              className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
-            >
-              <option value="all">Все время</option>
-              <option value="month">Последний месяц</option>
-              <option value="week">Последняя неделя</option>
-              <option value="custom">Произвольный период</option>
-            </select>
-          </div>
-          
-          {timeRange === 'custom' && (
-            <>
-              <div>
-                <label className="block mb-2 text-sm">Начальная дата:</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-sm">Конечная дата:</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
-                />
-              </div>
-            </>
-          )}
-          
-          <div className="flex items-end sm:items-center h-full">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={showArchivedData}
-                onChange={(e) => setShowArchivedData(e.target.checked)}
-                className="mr-2"
-              />
-              <span className="text-sm">Включить архивные данные</span>
-            </label>
-          </div>
-        </div>
-      </div>
-      
-      {/* Content will be added in subsequent edits */}
-      {days.length > 0 ? (
-        <div>
-          {/* Key Metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            {/* Total Growth */}
-            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
-              <h3 className="text-sm text-gray-400 mb-2">Общий рост</h3>
-              <div className="text-xl sm:text-2xl font-bold mb-1">
-                {filteredDays.length > 0 ? (
-                  <span className={`${filteredDays[filteredDays.length-1].deposit > initialDeposit ? 'text-green-400' : 'text-red-400'}`}>
-                    {((filteredDays[filteredDays.length-1].deposit / initialDeposit - 1) * 100).toFixed(2)}%
-                  </span>
-                ) : (
-                  <span className="text-green-400">
-                    {((deposit / initialDeposit - 1) * 100).toFixed(2)}%
-                  </span>
-                )}
-              </div>
-              <div className="text-xs text-gray-500">
-                {initialDeposit.toFixed(2)}$ → {deposit.toFixed(2)}$
-              </div>
-            </div>
-            
-            {/* Average Percentage */}
-            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
-              <h3 className="text-sm text-gray-400 mb-2">Средний % в день</h3>
-              <div className="text-xl sm:text-2xl font-bold mb-1">
-                {filteredDays.length > 0 ? (
-                  <span className={`${(filteredDays.reduce((sum, day) => sum + day.percentage, 0) / filteredDays.length) > 0 ? 'text-blue-400' : 'text-red-400'}`}>
-                    {(filteredDays.reduce((sum, day) => sum + day.percentage, 0) / filteredDays.length).toFixed(2)}%
-                  </span>
-                ) : (
-                  <span>0.00%</span>
-                )}
-              </div>
-              <div className="text-xs text-gray-500">
-                Целевой показатель: {dailyTarget}%
-              </div>
-            </div>
-            
-            {/* Success Rate */}
-            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
-              <h3 className="text-sm text-gray-400 mb-2">Успешность сделок</h3>
-              <div className="text-xl sm:text-2xl font-bold mb-1">
-                {filteredDays.length > 0 ? (
-                  <span className="text-blue-400">
-                    {(filteredDays.filter(day => day.percentage > 0).length / filteredDays.length * 100).toFixed(1)}%
-                  </span>
-                ) : (
-                  <span>0.0%</span>
-                )}
-              </div>
-              <div className="text-xs text-gray-500">
-                {filteredDays.filter(day => day.percentage > 0).length} из {filteredDays.length} сделок
-              </div>
-            </div>
-            
-            {/* Leverage Impact */}
-            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
-              <h3 className="text-sm text-gray-400 mb-2">Влияние плеча</h3>
-              <div className="text-xl sm:text-2xl font-bold mb-1">
-                <span className="text-yellow-400">
-                  {(leverage)}x
-                </span>
-              </div>
-              <div className="text-xs text-gray-500">
-                Доход с плечом: ${(filteredDays.reduce((sum, day) => sum + day.amount, 0)).toFixed(2)}
-              </div>
-            </div>
-          </div>
-          
-          {/* Additional metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
-              <h3 className="text-sm text-gray-400 mb-2">Лучший день</h3>
-              {filteredDays.length > 0 ? (
-                <>
-                  <div className="text-lg sm:text-xl font-bold mb-1">
-                    {filteredDays.reduce((best, day) => (day.percentage > best.percentage ? day : best), filteredDays[0]).percentage.toFixed(2)}%
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    Дата: {filteredDays.reduce((best, day) => (day.percentage > best.percentage ? day : best), filteredDays[0]).date}
-                  </div>
-                </>
-              ) : (
-                <div className="text-gray-500">Нет данных</div>
-              )}
-            </div>
-            
-            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
-              <h3 className="text-sm text-gray-400 mb-2">Худший день</h3>
-              {filteredDays.length > 0 ? (
-                <>
-                  <div className="text-lg sm:text-xl font-bold text-red-400 mb-1">
-                    {filteredDays.reduce((worst, day) => (day.percentage < worst.percentage ? day : worst), filteredDays[0]).percentage.toFixed(2)}%
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    Дата: {filteredDays.reduce((worst, day) => (day.percentage < worst.percentage ? day : worst), filteredDays[0]).date}
-                  </div>
-                </>
-              ) : (
-                <div className="text-gray-500">Нет данных</div>
-              )}
-            </div>
-            
-            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
-              <h3 className="text-sm text-gray-400 mb-2">Последовательные прибыльные дни</h3>
-              {filteredDays.length > 0 ? (
-                <>
-                  <div className="text-lg sm:text-xl font-bold mb-1">
-                    {(() => {
-                      let maxStreak = 0;
-                      let currentStreak = 0;
-                      
-                      // Sort by date
-                      const sortedDays = [...filteredDays].sort((a, b) => new Date(a.date) - new Date(b.date));
-                      
-                      sortedDays.forEach(day => {
-                        if (day.percentage > 0) {
-                          currentStreak++;
-                          maxStreak = Math.max(maxStreak, currentStreak);
-                        } else {
-                          currentStreak = 0;
-                        }
-                      });
-                      
-                      return maxStreak;
-                    })()}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    Текущая серия: {(() => {
-                      let currentStreak = 0;
-                      
-                      // Sort by date (descending)
-                      const sortedDays = [...filteredDays].sort((a, b) => new Date(b.date) - new Date(a.date));
-                      
-                      for (const day of sortedDays) {
-                        if (day.percentage > 0) {
-                          currentStreak++;
-                        } else {
-                          break;
-                        }
-                      }
-                      
-                      return currentStreak;
-                    })()}
-                  </div>
-                </>
-              ) : (
-                <div className="text-gray-500">Нет данных</div>
-              )}
-            </div>
-          </div>
-          
-          {/* Charts Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-            {/* Deposit Growth Chart */}
-            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
-              <h3 className="text-lg font-medium mb-3 sm:mb-4 text-blue-300">Рост депозита</h3>
-              {filteredDays.length > 0 && (
-                <div className="h-60 sm:h-80">
-                  <Line
-                    data={{
-                      labels: filteredDays.map(day => day.date),
-                      datasets: [
-                        {
-                          label: 'Депозит',
-                          data: filteredDays.map(day => day.deposit),
-                          borderColor: 'rgba(59, 130, 246, 0.8)',
-                          backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                          fill: true,
-                          tension: 0.4
-                        },
-                        {
-                          label: 'С учетом плеча',
-                          data: filteredDays.map(day => day.deposit * leverage),
-                          borderColor: 'rgba(249, 115, 22, 0.8)',
-                          backgroundColor: 'rgba(249, 115, 22, 0.1)',
-                          borderDash: [5, 5],
-                          fill: false
-                        }
-                      ]
-                    }}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          position: 'top',
-                          labels: {
-                            color: 'white',
-                            boxWidth: 10,
-                            font: {
-                              size: window.innerWidth < 768 ? 10 : 12
-                            }
-                          }
-                        },
-                        tooltip: {
-                          mode: 'index',
-                          intersect: false
-                        }
-                      },
-                      scales: {
-                        x: {
-                          ticks: {
-                            color: 'rgba(255, 255, 255, 0.7)',
-                            maxRotation: 45,
-                            minRotation: 45,
-                            font: {
-                              size: window.innerWidth < 768 ? 8 : 10
-                            },
-                            callback: function(value, index, values) {
-                              // On small screens, show fewer labels
-                              return window.innerWidth < 768 ? 
-                                (index % 2 === 0 ? this.getLabelForValue(value) : '') : 
-                                this.getLabelForValue(value);
-                            }
-                          },
-                          grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                          }
-                        },
-                        y: {
-                          ticks: {
-                            color: 'rgba(255, 255, 255, 0.7)',
-                            font: {
-                              size: window.innerWidth < 768 ? 8 : 10
-                            },
-                            callback: function(value) {
-                              return '$' + value.toFixed(2);
-                            }
-                          },
-                          grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                          }
-                        }
-                      }
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-            
-            {/* Daily Percentage Chart */}
-            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
-              <h3 className="text-lg font-medium mb-3 sm:mb-4 text-blue-300">Процент за день</h3>
-              {filteredDays.length > 0 && (
-                <div className="h-60 sm:h-80">
-                  <Bar
-                    data={{
-                      labels: filteredDays.map(day => day.date),
-                      datasets: [
-                        {
-                          label: 'Процент',
-                          data: filteredDays.map(day => day.percentage),
-                          backgroundColor: filteredDays.map(day => 
-                            day.percentage < 0 ? 'rgba(239, 68, 68, 0.7)' : // red
-                            day.percentage === 0 ? 'rgba(156, 163, 175, 0.7)' : // gray
-                            day.percentage > dailyTarget ? 'rgba(139, 92, 246, 0.7)' : // purple
-                            'rgba(59, 130, 246, 0.7)' // blue
-                          ),
-                          borderColor: 'rgba(255, 255, 255, 0.1)',
-                          borderWidth: 1
-                        },
-                        {
-                          label: 'Целевой %',
-                          data: filteredDays.map(() => dailyTarget),
-                          type: 'line',
-                          borderColor: 'rgba(34, 197, 94, 0.8)',
-                          borderDash: [5, 5],
-                          borderWidth: 2,
-                          fill: false,
-                          pointRadius: 0
-                        }
-                      ]
-                    }}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          position: 'top',
-                          labels: {
-                            color: 'white',
-                            boxWidth: 10,
-                            font: {
-                              size: window.innerWidth < 768 ? 10 : 12
-                            }
-                          }
-                        },
-                        tooltip: {
-                          mode: 'index',
-                          intersect: false
-                        }
-                      },
-                      scales: {
-                        x: {
-                          ticks: {
-                            color: 'rgba(255, 255, 255, 0.7)',
-                            maxRotation: 45,
-                            minRotation: 45,
-                            font: {
-                              size: window.innerWidth < 768 ? 8 : 10
-                            },
-                            callback: function(value, index, values) {
-                              // On small screens, show fewer labels
-                              return window.innerWidth < 768 ? 
-                                (index % 2 === 0 ? this.getLabelForValue(value) : '') : 
-                                this.getLabelForValue(value);
-                            }
-                          },
-                          grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                          }
-                        },
-                        y: {
-                          ticks: {
-                            color: 'rgba(255, 255, 255, 0.7)',
-                            font: {
-                              size: window.innerWidth < 768 ? 8 : 10
-                            },
-                            callback: function(value) {
-                              return value.toFixed(2) + '%';
-                            }
-                          },
-                          grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                          }
-                        }
-                      }
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Distribution Charts */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-            {/* Profit/Loss Distribution */}
-            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
-              <h3 className="text-lg font-medium mb-3 sm:mb-4 text-blue-300">Распределение прибыли/убытка</h3>
-              {filteredDays.length > 0 && (
-                <div className="h-60 sm:h-80">
-                  <Pie
-                    data={{
-                      labels: ['Прибыльные дни', 'Убыточные дни', 'Нейтральные дни'],
-                      datasets: [
-                        {
-                          data: [
-                            filteredDays.filter(day => day.percentage > 0).length,
-                            filteredDays.filter(day => day.percentage < 0).length,
-                            filteredDays.filter(day => day.percentage === 0).length
-                          ],
-                          backgroundColor: [
-                            'rgba(34, 197, 94, 0.7)', // green
-                            'rgba(239, 68, 68, 0.7)', // red
-                            'rgba(156, 163, 175, 0.7)' // gray
-                          ],
-                          borderColor: 'rgba(30, 41, 59, 1)',
-                          borderWidth: 2
-                        }
-                      ]
-                    }}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          position: window.innerWidth < 640 ? 'bottom' : 'top',
-                          labels: {
-                            color: 'white',
-                            boxWidth: 10,
-                            font: {
-                              size: window.innerWidth < 768 ? 10 : 12
-                            },
-                            padding: window.innerWidth < 640 ? 8 : 12
-                          }
-                        },
-                        tooltip: {
-                          callbacks: {
-                            label: function(context) {
-                              const value = context.raw;
-                              const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
-                              const percentage = ((value / total) * 100).toFixed(1);
-                              return `${context.label}: ${value} (${percentage}%)`;
-                            }
-                          }
-                        }
-                      }
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-            
-            {/* Performance vs Target */}
-            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
-              <h3 className="text-lg font-medium mb-3 sm:mb-4 text-blue-300">Производительность относительно цели</h3>
-              {filteredDays.length > 0 && (
-                <div className="h-60 sm:h-80">
-                  <Pie
-                    data={{
-                      labels: ['Выше цели', 'Ниже цели (прибыль)', 'Убыток'],
-                      datasets: [
-                        {
-                          data: [
-                            filteredDays.filter(day => day.percentage > dailyTarget).length,
-                            filteredDays.filter(day => day.percentage > 0 && day.percentage < dailyTarget).length,
-                            filteredDays.filter(day => day.percentage <= 0).length
-                          ],
-                          backgroundColor: [
-                            'rgba(139, 92, 246, 0.7)', // purple
-                            'rgba(59, 130, 246, 0.7)', // blue
-                            'rgba(239, 68, 68, 0.7)' // red
-                          ],
-                          borderColor: 'rgba(30, 41, 59, 1)',
-                          borderWidth: 2
-                        }
-                      ]
-                    }}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          position: window.innerWidth < 640 ? 'bottom' : 'top',
-                          labels: {
-                            color: 'white',
-                            boxWidth: 10,
-                            font: {
-                              size: window.innerWidth < 768 ? 10 : 12
-                            },
-                            padding: window.innerWidth < 640 ? 8 : 12
-                          }
-                        },
-                        tooltip: {
-                          callbacks: {
-                            label: function(context) {
-                              const value = context.raw;
-                              const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
-                              const percentage = ((value / total) * 100).toFixed(1);
-                              return `${context.label}: ${value} (${percentage}%)`;
-                            }
-                          }
-                        }
-                      }
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Advanced Analytics */}
-          <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700 mb-4 sm:mb-6">
-            <h3 className="text-lg font-medium mb-3 sm:mb-4 text-blue-300">Анализ эффективности</h3>
-            
-            {filteredDays.length > 0 ? (
-              <div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 mb-3 sm:mb-4">
-                  <div>
-                    <label className="block mb-2 text-sm">Период сравнения:</label>
-                    <select 
-                      value={comparisonPeriod || ''}
-                      onChange={(e) => setComparisonPeriod(e.target.value || null)}
-                      className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
-                    >
-                      <option value="">Без сравнения</option>
-                      <option value="previous">Предыдущий период</option>
-                      <option value="benchmark">Эталонный показатель</option>
-                    </select>
-                  </div>
-                  
-                  {comparisonPeriod === 'benchmark' && (
-                    <div>
-                      <label className="block mb-2 text-sm">Эталонный % в день:</label>
-                      <input
-                        type="number"
-                        value={benchmarkTarget}
-                        onChange={(e) => setBenchmarkTarget(parseFloat(e.target.value) || dailyTarget)}
-                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
-                        step="0.01"
-                        min="0"
-                      />
-                    </div>
-                  )}
-                </div>
-                
-                <div className="overflow-x-auto mt-3 sm:mt-4">
-                  <table className="w-full min-w-[640px]">
-                    <thead>
-                      <tr className="bg-gray-700">
-                        <th className="p-2 text-left">Показатель</th>
-                        <th className="p-2 text-left">Текущий период</th>
-                        {comparisonPeriod && <th className="p-2 text-left">Сравнение</th>}
-                        {comparisonPeriod && <th className="p-2 text-left">Изменение</th>}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {/* Average Percentage */}
-                      <tr className="border-b border-gray-700">
-                        <td className="p-2">Средний % в день</td>
-                        <td className="p-2">
-                          <span className={`${(filteredDays.reduce((sum, day) => sum + day.percentage, 0) / filteredDays.length) > 0 ? 'text-blue-400' : 'text-red-400'}`}>
-                            {(filteredDays.reduce((sum, day) => sum + day.percentage, 0) / filteredDays.length).toFixed(2)}%
-                          </span>
-                        </td>
-                        {comparisonPeriod === 'benchmark' && (
-                          <>
-                            <td className="p-2">
-                              <span className="text-green-400">{benchmarkTarget}%</span>
-                            </td>
-                            <td className="p-2">
-                              <span className={`${(filteredDays.reduce((sum, day) => sum + day.percentage, 0) / filteredDays.length) >= benchmarkTarget ? 'text-green-400' : 'text-red-400'}`}>
-                                {((filteredDays.reduce((sum, day) => sum + day.percentage, 0) / filteredDays.length) - benchmarkTarget).toFixed(2)}%
-                              </span>
-                            </td>
-                          </>
-                        )}
-                        {comparisonPeriod === 'previous' && (
-                          <>
-                            <td className="p-2">
-                              {(() => {
-                                // Divide the filtered days into two equal periods
-                                const sortedDays = [...filteredDays].sort((a, b) => new Date(a.date) - new Date(b.date));
-                                const half = Math.floor(sortedDays.length / 2);
-                                const prevPeriod = sortedDays.slice(0, half);
-                                
-                                if (prevPeriod.length > 0) {
-                                  const prevAvg = prevPeriod.reduce((sum, day) => sum + day.percentage, 0) / prevPeriod.length;
-                                  return (
-                                    <span className={`${prevAvg > 0 ? 'text-blue-400' : 'text-red-400'}`}>
-                                      {prevAvg.toFixed(2)}%
-                                    </span>
-                                  );
-                                }
-                                
-                                return <span className="text-gray-400">Н/Д</span>;
-                              })()}
-                            </td>
-                            <td className="p-2">
-                              {(() => {
-                                // Divide the filtered days into two equal periods
-                                const sortedDays = [...filteredDays].sort((a, b) => new Date(a.date) - new Date(b.date));
-                                const half = Math.floor(sortedDays.length / 2);
-                                const prevPeriod = sortedDays.slice(0, half);
-                                const currentPeriod = sortedDays.slice(half);
-                                
-                                if (prevPeriod.length > 0 && currentPeriod.length > 0) {
-                                  const prevAvg = prevPeriod.reduce((sum, day) => sum + day.percentage, 0) / prevPeriod.length;
-                                  const currentAvg = currentPeriod.reduce((sum, day) => sum + day.percentage, 0) / currentPeriod.length;
-                                  const change = currentAvg - prevAvg;
-                                  
-                                  return (
-                                    <span className={`${change > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                      {change > 0 ? '+' : ''}{change.toFixed(2)}%
-                                    </span>
-                                  );
-                                }
-                                
-                                return <span className="text-gray-400">Н/Д</span>;
-                              })()}
-                            </td>
-                          </>
-                        )}
-                      </tr>
-                      
-                      {/* Success Rate */}
-                      <tr className="border-b border-gray-700">
-                        <td className="p-2">Успешность сделок</td>
-                        <td className="p-2">
-                          <span className="text-blue-400">
-                            {(filteredDays.filter(day => day.percentage > 0).length / filteredDays.length * 100).toFixed(1)}%
-                          </span>
-                        </td>
-                        {comparisonPeriod === 'benchmark' && (
-                          <>
-                            <td className="p-2">
-                              <span className="text-green-400">80.0%</span>
-                            </td>
-                            <td className="p-2">
-                              <span className={`${(filteredDays.filter(day => day.percentage > 0).length / filteredDays.length * 100) >= 80 ? 'text-green-400' : 'text-red-400'}`}>
-                                {((filteredDays.filter(day => day.percentage > 0).length / filteredDays.length * 100) - 80).toFixed(1)}%
-                              </span>
-                            </td>
-                          </>
-                        )}
-                        {comparisonPeriod === 'previous' && (
-                          <>
-                            <td className="p-2">
-                              {(() => {
-                                // Divide the filtered days into two equal periods
-                                const sortedDays = [...filteredDays].sort((a, b) => new Date(a.date) - new Date(b.date));
-                                const half = Math.floor(sortedDays.length / 2);
-                                const prevPeriod = sortedDays.slice(0, half);
-                                
-                                if (prevPeriod.length > 0) {
-                                  const prevSuccessRate = prevPeriod.filter(day => day.percentage > 0).length / prevPeriod.length * 100;
-                                  return (
-                                    <span className="text-blue-400">
-                                      {prevSuccessRate.toFixed(1)}%
-                                    </span>
-                                  );
-                                }
-                                
-                                return <span className="text-gray-400">Н/Д</span>;
-                              })()}
-                            </td>
-                            <td className="p-2">
-                              {(() => {
-                                // Divide the filtered days into two equal periods
-                                const sortedDays = [...filteredDays].sort((a, b) => new Date(a.date) - new Date(b.date));
-                                const half = Math.floor(sortedDays.length / 2);
-                                const prevPeriod = sortedDays.slice(0, half);
-                                const currentPeriod = sortedDays.slice(half);
-                                
-                                if (prevPeriod.length > 0 && currentPeriod.length > 0) {
-                                  const prevSuccessRate = prevPeriod.filter(day => day.percentage > 0).length / prevPeriod.length * 100;
-                                  const currentSuccessRate = currentPeriod.filter(day => day.percentage > 0).length / currentPeriod.length * 100;
-                                  const change = currentSuccessRate - prevSuccessRate;
-                                  
-                                  return (
-                                    <span className={`${change > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                      {change > 0 ? '+' : ''}{change.toFixed(1)}%
-                                    </span>
-                                  );
-                                }
-                                
-                                return <span className="text-gray-400">Н/Д</span>;
-                              })()}
-                            </td>
-                          </>
-                        )}
-                      </tr>
-                      
-                      {/* Total Growth */}
-                      <tr>
-                        <td className="p-2">Общий рост</td>
-                        <td className="p-2">
-                          <span className={`${((filteredDays[filteredDays.length-1]?.deposit || deposit) / initialDeposit - 1) * 100 > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {((filteredDays[filteredDays.length-1]?.deposit || deposit) / initialDeposit - 1) * 100 > 0 ? '+' : ''}
-                            {(((filteredDays[filteredDays.length-1]?.deposit || deposit) / initialDeposit - 1) * 100).toFixed(2)}%
-                          </span>
-                        </td>
-                        {comparisonPeriod === 'benchmark' && (
-                          <>
-                            <td className="p-2">
-                              <span className="text-green-400">
-                                {(() => {
-                                  // Calculate expected compound growth based on benchmark
-                                  const expectedGrowth = ((1 + benchmarkTarget / 100) ** filteredDays.length - 1) * 100;
-                                  return `+${expectedGrowth.toFixed(2)}%`;
-                                })()}
-                              </span>
-                            </td>
-                            <td className="p-2">
-                              <span className={`${((filteredDays[filteredDays.length-1]?.deposit || deposit) / initialDeposit - 1) * 100 > ((1 + benchmarkTarget / 100) ** filteredDays.length - 1) * 100 ? 'text-green-400' : 'text-red-400'}`}>
-                                {(() => {
-                                  // Calculate difference between actual and expected growth
-                                  const actualGrowth = ((filteredDays[filteredDays.length-1]?.deposit || deposit) / initialDeposit - 1) * 100;
-                                  const expectedGrowth = ((1 + benchmarkTarget / 100) ** filteredDays.length - 1) * 100;
-                                  const diff = actualGrowth - expectedGrowth;
-                                  return `${diff > 0 ? '+' : ''}${diff.toFixed(2)}%`;
-                                })()}
-                              </span>
-                            </td>
-                          </>
-                        )}
-                        {comparisonPeriod === 'previous' && (
-                          <>
-                            <td className="p-2">
-                              <span className="text-gray-400">Неприменимо</span>
-                            </td>
-                            <td className="p-2">
-                              <span className="text-gray-400">Неприменимо</span>
-                            </td>
-                          </>
-                        )}
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ) : (
-              <p className="text-gray-400">Недостаточно данных для анализа.</p>
-            )}
-          </div>
-          
-          <p className="text-gray-400 mb-4 text-sm sm:text-base">Дополнительные графики и аналитика будут добавлены в следующих обновлениях.</p>
-        </div>
-      ) : (
-        <div className="bg-gray-800 p-4 sm:p-6 rounded border border-gray-700 text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
-          <p className="text-gray-400 mb-4">У вас пока нет данных для анализа</p>
-          <button 
-            onClick={() => {
-              setActiveSection('dashboard');
-            }}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Добавить первую сделку
-          </button>
-        </div>
-      )}
+      {/* Analytics content will be added here */}
     </div>
   );
 };
 
+// At the very end of the file
 export default DepositTracker;

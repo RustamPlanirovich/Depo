@@ -45,6 +45,7 @@ const DepositTracker = () => {
   const [newGoalName, setNewGoalName] = useState('');
   const [editingGoalIndex, setEditingGoalIndex] = useState(null);
   const [activeSection, setActiveSection] = useState('dashboard'); // Новый state для активного раздела
+  const [mobileNavOpen, setMobileNavOpen] = useState(false); // State for mobile navigation
 
   // Загрузка данных из localStorage при инициализации
   useEffect(() => {
@@ -993,16 +994,46 @@ const DepositTracker = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-900 text-gray-100 overflow-hidden">
-      {/* Sidebar Navigation */}
-      <div className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
-        <div className="p-4 border-b border-gray-700">
+    <div className="flex flex-col md:flex-row h-screen bg-gray-900 text-gray-100 overflow-hidden">
+      {/* Mobile Navigation Bar (visible only on small screens) */}
+      <div className="md:hidden bg-gray-800 border-b border-gray-700 p-3 flex justify-between items-center">
+        <h1 className="text-lg font-bold text-blue-300">Разгон депозита</h1>
+        <button 
+          onClick={() => setMobileNavOpen(!mobileNavOpen)}
+          className="p-2 rounded-md text-gray-300 hover:bg-gray-700"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+      
+      {/* Sidebar Navigation (responsive) */}
+      <div className={`${mobileNavOpen ? 'block' : 'hidden'} md:block w-full md:w-64 bg-gray-800 border-r border-gray-700 flex flex-col ${mobileNavOpen ? 'h-screen fixed top-0 left-0 z-10' : ''}`}>
+        {mobileNavOpen && (
+          <div className="md:hidden p-3 border-b border-gray-700 flex justify-between items-center">
+            <h1 className="text-lg font-bold text-blue-300">Разгон депозита</h1>
+            <button 
+              onClick={() => setMobileNavOpen(false)}
+              className="p-2 rounded-md text-gray-300 hover:bg-gray-700"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+        
+        <div className="hidden md:block p-4 border-b border-gray-700">
           <h1 className="text-xl font-bold text-blue-300">Разгон депозита</h1>
         </div>
         
-        <nav className="flex-1 p-2 space-y-1">
+        <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
           <button 
-            onClick={() => setActiveSection('dashboard')}
+            onClick={() => {
+              setActiveSection('dashboard');
+              setMobileNavOpen(false);
+            }}
             className={`w-full text-left px-3 py-2 rounded flex items-center ${activeSection === 'dashboard' ? 'bg-blue-700' : 'hover:bg-gray-700'}`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -1012,7 +1043,10 @@ const DepositTracker = () => {
           </button>
           
           <button 
-            onClick={() => setActiveSection('transactions')}
+            onClick={() => {
+              setActiveSection('transactions');
+              setMobileNavOpen(false);
+            }}
             className={`w-full text-left px-3 py-2 rounded flex items-center ${activeSection === 'transactions' ? 'bg-blue-700' : 'hover:bg-gray-700'}`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -1022,7 +1056,10 @@ const DepositTracker = () => {
           </button>
           
           <button 
-            onClick={() => setActiveSection('analytics')}
+            onClick={() => {
+              setActiveSection('analytics');
+              setMobileNavOpen(false);
+            }}
             className={`w-full text-left px-3 py-2 rounded flex items-center ${activeSection === 'analytics' ? 'bg-blue-700' : 'hover:bg-gray-700'}`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -1032,7 +1069,10 @@ const DepositTracker = () => {
           </button>
           
           <button 
-            onClick={() => setActiveSection('goals')}
+            onClick={() => {
+              setActiveSection('goals');
+              setMobileNavOpen(false);
+            }}
             className={`w-full text-left px-3 py-2 rounded flex items-center ${activeSection === 'goals' ? 'bg-blue-700' : 'hover:bg-gray-700'}`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -1042,7 +1082,10 @@ const DepositTracker = () => {
           </button>
           
           <button 
-            onClick={() => setActiveSection('archive')}
+            onClick={() => {
+              setActiveSection('archive');
+              setMobileNavOpen(false);
+            }}
             className={`w-full text-left px-3 py-2 rounded flex items-center ${activeSection === 'archive' ? 'bg-blue-700' : 'hover:bg-gray-700'}`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -1053,7 +1096,10 @@ const DepositTracker = () => {
           </button>
           
           <button 
-            onClick={() => setActiveSection('settings')}
+            onClick={() => {
+              setActiveSection('settings');
+              setMobileNavOpen(false);
+            }}
             className={`w-full text-left px-3 py-2 rounded flex items-center ${activeSection === 'settings' ? 'bg-blue-700' : 'hover:bg-gray-700'}`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -1073,7 +1119,7 @@ const DepositTracker = () => {
       </div>
       
       {/* Main Content Area */}
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-auto p-2 sm:p-4">
         {/* Content will change based on activeSection */}
         
         {/* Dashboard Section */}
@@ -1205,200 +1251,172 @@ const DashboardSection = ({
     <div>
       <h1 className="text-2xl font-bold mb-6 text-blue-300">Обзор</h1>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Current State Card */}
+      {/* Dashboard Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* Initial Deposit */}
         <div className="bg-gray-800 p-4 rounded border border-gray-700">
-          <h2 className="text-lg font-medium mb-3 text-blue-300">Текущее состояние</h2>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span>Текущий депозит:</span>
-              <span className="font-bold">${deposit.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>С учетом плеча:</span>
-              <span className="font-bold">${(deposit * leverage).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Количество сделок:</span>
-              <span className="font-bold">{days.length}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Прирост к начальному:</span>
-              <span className="font-bold text-green-400">{deposit > initialDeposit ? '+' : ''}{((deposit / initialDeposit - 1) * 100).toFixed(2)}%</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Целевой % в день:</span>
-              <span className="font-bold">{dailyTarget}%</span>
-            </div>
+          <h3 className="text-sm text-gray-400 mb-2">Начальный депозит</h3>
+          <div className="text-2xl font-bold">${initialDeposit.toFixed(2)}</div>
+        </div>
+        
+        {/* Current Deposit */}
+        <div className="bg-gray-800 p-4 rounded border border-gray-700">
+          <h3 className="text-sm text-gray-400 mb-2">Текущий депозит</h3>
+          <div className="text-2xl font-bold text-blue-300">${deposit.toFixed(2)}</div>
+          <div className="text-xs text-gray-500 mt-1">
+            {deposit > initialDeposit ? (
+              <span className="text-green-400">+{((deposit - initialDeposit) / initialDeposit * 100).toFixed(2)}%</span>
+            ) : (
+              <span className="text-red-400">{((deposit - initialDeposit) / initialDeposit * 100).toFixed(2)}%</span>
+            )}
           </div>
         </div>
         
-        {/* Add New Transaction Card */}
+        {/* Leveraged Deposit */}
         <div className="bg-gray-800 p-4 rounded border border-gray-700">
-          <h2 className="text-lg font-medium mb-3 text-blue-300">Добавить новую сделку</h2>
-          <div className="flex justify-between mb-3">
+          <h3 className="text-sm text-gray-400 mb-2">С учетом плеча {leverage}x</h3>
+          <div className="text-2xl font-bold text-yellow-400">${(deposit * leverage).toFixed(2)}</div>
+        </div>
+        
+        {/* Number of Days */}
+        <div className="bg-gray-800 p-4 rounded border border-gray-700">
+          <h3 className="text-sm text-gray-400 mb-2">Кол-во сделок</h3>
+          <div className="text-2xl font-bold text-purple-300">{days.length}</div>
+          {days.length > 0 && (
+            <div className="text-xs text-gray-500 mt-1">
+              Последняя: {days[days.length - 1].date}
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Add Transaction Form */}
+      <div className="bg-gray-800 p-4 md:p-6 rounded border border-gray-700 mb-6">
+        <h2 className="text-lg font-medium mb-4 text-blue-300">{editingDayIndex !== null ? 'Редактировать сделку' : 'Добавить сделку'}</h2>
+        
+        <div className="flex flex-col sm:flex-row items-center mb-4">
+          <div className="w-full sm:w-1/4 mb-3 sm:mb-0">
             <button 
-              onClick={toggleInputMode}
-              className={`px-4 py-2 rounded-md w-1/2 mr-2 ${inputMode === 'percentage' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+              onClick={toggleInputMode} 
+              className={`w-full px-3 py-2 rounded border ${inputMode === 'percentage' ? 'bg-blue-600 text-white border-blue-700' : 'bg-gray-700 text-gray-200 border-gray-600'}`}
             >
-              По проценту
-            </button>
-            <button 
-              onClick={toggleInputMode}
-              className={`px-4 py-2 rounded-md w-1/2 ${inputMode === 'amount' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
-            >
-              По сумме
+              Процент %
             </button>
           </div>
-          
+          <div className="w-full sm:w-1/4 mb-3 sm:mb-0 sm:ml-2">
+            <button 
+              onClick={toggleInputMode} 
+              className={`w-full px-3 py-2 rounded border ${inputMode === 'amount' ? 'bg-blue-600 text-white border-blue-700' : 'bg-gray-700 text-gray-200 border-gray-600'}`}
+            >
+              Сумма $
+            </button>
+          </div>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row items-end">
           {inputMode === 'percentage' ? (
-            <div className="mb-3">
-              <label className="block mb-1">Процент за сделку:</label>
-              <input
-                type="number"
-                value={newPercentage}
-                onChange={handlePercentageChange}
-                className="w-full p-2 border rounded bg-gray-700 text-white"
-                step="0.01"
-              />
+            <div className="w-full sm:w-1/2 md:w-1/3 mb-3 sm:mb-0">
+              <label className="block mb-2 text-sm">Процент прибыли/убытка:</label>
+              <div className="flex">
+                <input 
+                  type="number" 
+                  step="0.01"
+                  value={newPercentage} 
+                  onChange={handlePercentageChange}
+                  className="flex-1 p-2 bg-gray-700 border border-gray-600 rounded-l text-white"
+                  placeholder="-0.5 или 1.2"
+                />
+                <span className="bg-gray-600 text-white px-3 py-2 rounded-r">%</span>
+              </div>
             </div>
           ) : (
-            <div className="mb-3">
-              <label className="block mb-1">Сумма прибыли ($):</label>
-              <input
-                type="number"
-                value={newAmount}
-                onChange={handleAmountChange}
-                className="w-full p-2 border rounded bg-gray-700 text-white"
-                step="0.01"
-              />
+            <div className="w-full sm:w-1/2 md:w-1/3 mb-3 sm:mb-0">
+              <label className="block mb-2 text-sm">Сумма прибыли/убытка:</label>
+              <div className="flex">
+                <span className="bg-gray-600 text-white px-3 py-2 rounded-l">$</span>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  value={newAmount} 
+                  onChange={handleAmountChange}
+                  className="flex-1 p-2 bg-gray-700 border border-gray-600 rounded-r text-white"
+                  placeholder="-50 или 100"
+                />
+              </div>
             </div>
           )}
           
-          {editingDayIndex !== null ? (
-            <div className="grid grid-cols-2 gap-2">
+          <div className="mt-3 sm:mt-0 w-full sm:w-auto sm:ml-3">
+            {editingDayIndex !== null ? (
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                <button 
+                  onClick={saveEditedDay} 
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  Сохранить
+                </button>
+                <button 
+                  onClick={cancelEditing} 
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                >
+                  Отмена
+                </button>
+              </div>
+            ) : (
               <button 
-                onClick={saveEditedDay}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                onClick={addDay} 
+                className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
-                Сохранить
+                Добавить
               </button>
-              <button 
-                onClick={cancelEditing}
-                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-              >
-                Отмена
-              </button>
-            </div>
-          ) : (
-            <button 
-              onClick={addDay}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
-            >
-              Добавить сделку
-            </button>
-          )}
-        </div>
-        
-        {/* Statistics Card */}
-        {days.length > 0 && (
-          <div className="bg-gray-800 p-4 rounded border border-gray-700">
-            <h2 className="text-lg font-medium mb-3 text-blue-300">Прогнозы</h2>
-            <div className="space-y-4">
-              <div>
-                <div className="text-sm text-gray-400 mb-1">Удвоение депозита</div>
-                <div className="font-medium">
-                  ${deposit.toFixed(2)} → ${(deposit * 2).toFixed(2)}{' '}
-                  {(() => {
-                    const avgPercentage = days.reduce((sum, day) => sum + day.percentage, 0) / days.length;
-                    if (avgPercentage <= 0) {
-                      return <span className="text-red-400">Невозможно (средний % отрицательный)</span>;
-                    } else {
-                      return (
-                        <>
-                          за{' '}
-                          <span className="text-yellow-400 font-bold">
-                            {Math.ceil(70 / avgPercentage).toFixed(0)} дней
-                          </span>
-                        </>
-                      );
-                    }
-                  })()}
-                </div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-gray-400 mb-1">До $1000</div>
-                <div className="font-medium">
-                  {deposit < 1000 ? (
-                    (() => {
-                      const avgPercentage = days.reduce((sum, day) => sum + day.percentage, 0) / days.length;
-                      if (avgPercentage <= 0) {
-                        return <span className="text-red-400">Невозможно (средний % отрицательный)</span>;
-                      } else {
-                        return (
-                          <>
-                            ${deposit.toFixed(2)} → $1,000 за{' '}
-                            <span className="text-yellow-400 font-bold">
-                              {Math.ceil(Math.log(1000 / deposit) / Math.log(1 + avgPercentage / 100)).toFixed(0)} дней
-                            </span>
-                          </>
-                        );
-                      }
-                    })()
-                  ) : (
-                    <span className="text-green-400">Достигнуто!</span>
-                  )}
-                </div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-gray-400 mb-1">Средний % в день</div>
-                <div className="font-medium">
-                  <span className={days.reduce((sum, day) => sum + day.percentage, 0) / days.length >= 0 ? "text-blue-400" : "text-red-400"}>
-                    {(days.reduce((sum, day) => sum + day.percentage, 0) / days.length).toFixed(2)}%
-                  </span>
-                  {' '} (цель: {dailyTarget}%)
-                </div>
-              </div>
-            </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
       
       {/* Recent Transactions */}
-      {days.length > 0 && (
-        <div className="mt-6 bg-gray-800 p-4 rounded border border-gray-700">
-          <h2 className="text-lg font-medium mb-3 text-blue-300">Последние сделки</h2>
+      <div className="bg-gray-800 p-4 md:p-6 rounded border border-gray-700">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-medium text-blue-300">Последние сделки</h2>
+        </div>
+        
+        {days.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-700">
-                  <th className="p-2 text-left">День</th>
+                  <th className="p-2 text-left">№</th>
                   <th className="p-2 text-left">Дата</th>
-                  <th className="p-2 text-left">Процент</th>
-                  <th className="p-2 text-left">Прибыль</th>
+                  <th className="p-2 text-left">%</th>
+                  <th className="p-2 text-left">Сумма</th>
+                  <th className="p-2 text-left">Депозит</th>
                 </tr>
               </thead>
               <tbody>
-                {days.slice(-5).reverse().map((day) => (
-                  <tr key={day.day} style={{ backgroundColor: 
-                    day.color === 'green' ? 'rgba(74, 222, 128, 0.2)' : 
-                    day.color === 'red' ? 'rgba(248, 113, 113, 0.2)' :
-                    day.color === 'purple' ? 'rgba(192, 132, 252, 0.2)' : 
-                    'rgba(125, 211, 252, 0.2)' 
-                  }}>
-                    <td className="p-2">{day.day}</td>
+                {days.slice(-5).map((day, index) => (
+                  <tr key={index} className="border-b border-gray-700">
+                    <td className="p-2">{day.dayNumber}</td>
                     <td className="p-2">{day.date}</td>
-                    <td className="p-2">{day.percentage.toFixed(2)}% {day.additionalText}</td>
-                    <td className="p-2">${day.amount.toFixed(2)}</td>
+                    <td className="p-2">
+                      <span className={day.percentage > 0 ? 'text-green-400' : day.percentage < 0 ? 'text-red-400' : 'text-gray-400'}>
+                        {day.percentage > 0 ? '+' : ''}{day.percentage}%
+                      </span>
+                    </td>
+                    <td className="p-2">
+                      <span className={day.amount > 0 ? 'text-green-400' : day.amount < 0 ? 'text-red-400' : 'text-gray-400'}>
+                        {day.amount > 0 ? '+' : ''}{day.amount.toFixed(2)}$
+                      </span>
+                    </td>
+                    <td className="p-2">{day.deposit.toFixed(2)}$</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="text-gray-400 text-center py-4">Нет данных. Добавьте свою первую сделку.</p>
+        )}
+      </div>
     </div>
   );
 };
@@ -2037,8 +2055,8 @@ const AnalyticsSection = ({
       <h1 className="text-2xl font-bold mb-6 text-blue-300">Аналитика</h1>
       
       {/* Filters and Controls */}
-      <div className="bg-gray-800 p-4 rounded border border-gray-700 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700 mb-4 sm:mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div>
             <label className="block mb-2 text-sm">Период времени:</label>
             <select 
@@ -2076,7 +2094,7 @@ const AnalyticsSection = ({
             </>
           )}
           
-          <div className="flex items-end">
+          <div className="flex items-end sm:items-center h-full">
             <label className="flex items-center">
               <input
                 type="checkbox"
@@ -2094,11 +2112,11 @@ const AnalyticsSection = ({
       {days.length > 0 ? (
         <div>
           {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
             {/* Total Growth */}
-            <div className="bg-gray-800 p-4 rounded border border-gray-700">
+            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
               <h3 className="text-sm text-gray-400 mb-2">Общий рост</h3>
-              <div className="text-2xl font-bold mb-1">
+              <div className="text-xl sm:text-2xl font-bold mb-1">
                 {filteredDays.length > 0 ? (
                   <span className={`${filteredDays[filteredDays.length-1].deposit > initialDeposit ? 'text-green-400' : 'text-red-400'}`}>
                     {((filteredDays[filteredDays.length-1].deposit / initialDeposit - 1) * 100).toFixed(2)}%
@@ -2115,9 +2133,9 @@ const AnalyticsSection = ({
             </div>
             
             {/* Average Percentage */}
-            <div className="bg-gray-800 p-4 rounded border border-gray-700">
+            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
               <h3 className="text-sm text-gray-400 mb-2">Средний % в день</h3>
-              <div className="text-2xl font-bold mb-1">
+              <div className="text-xl sm:text-2xl font-bold mb-1">
                 {filteredDays.length > 0 ? (
                   <span className={`${(filteredDays.reduce((sum, day) => sum + day.percentage, 0) / filteredDays.length) > 0 ? 'text-blue-400' : 'text-red-400'}`}>
                     {(filteredDays.reduce((sum, day) => sum + day.percentage, 0) / filteredDays.length).toFixed(2)}%
@@ -2132,9 +2150,9 @@ const AnalyticsSection = ({
             </div>
             
             {/* Success Rate */}
-            <div className="bg-gray-800 p-4 rounded border border-gray-700">
+            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
               <h3 className="text-sm text-gray-400 mb-2">Успешность сделок</h3>
-              <div className="text-2xl font-bold mb-1">
+              <div className="text-xl sm:text-2xl font-bold mb-1">
                 {filteredDays.length > 0 ? (
                   <span className="text-blue-400">
                     {(filteredDays.filter(day => day.percentage > 0).length / filteredDays.length * 100).toFixed(1)}%
@@ -2149,9 +2167,9 @@ const AnalyticsSection = ({
             </div>
             
             {/* Leverage Impact */}
-            <div className="bg-gray-800 p-4 rounded border border-gray-700">
+            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
               <h3 className="text-sm text-gray-400 mb-2">Влияние плеча</h3>
-              <div className="text-2xl font-bold mb-1">
+              <div className="text-xl sm:text-2xl font-bold mb-1">
                 <span className="text-yellow-400">
                   {(leverage)}x
                 </span>
@@ -2163,12 +2181,12 @@ const AnalyticsSection = ({
           </div>
           
           {/* Additional metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            <div className="bg-gray-800 p-4 rounded border border-gray-700">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
               <h3 className="text-sm text-gray-400 mb-2">Лучший день</h3>
               {filteredDays.length > 0 ? (
                 <>
-                  <div className="text-xl font-bold mb-1">
+                  <div className="text-lg sm:text-xl font-bold mb-1">
                     {filteredDays.reduce((best, day) => (day.percentage > best.percentage ? day : best), filteredDays[0]).percentage.toFixed(2)}%
                   </div>
                   <div className="text-xs text-gray-500">
@@ -2180,11 +2198,11 @@ const AnalyticsSection = ({
               )}
             </div>
             
-            <div className="bg-gray-800 p-4 rounded border border-gray-700">
+            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
               <h3 className="text-sm text-gray-400 mb-2">Худший день</h3>
               {filteredDays.length > 0 ? (
                 <>
-                  <div className="text-xl font-bold text-red-400 mb-1">
+                  <div className="text-lg sm:text-xl font-bold text-red-400 mb-1">
                     {filteredDays.reduce((worst, day) => (day.percentage < worst.percentage ? day : worst), filteredDays[0]).percentage.toFixed(2)}%
                   </div>
                   <div className="text-xs text-gray-500">
@@ -2196,11 +2214,11 @@ const AnalyticsSection = ({
               )}
             </div>
             
-            <div className="bg-gray-800 p-4 rounded border border-gray-700">
+            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
               <h3 className="text-sm text-gray-400 mb-2">Последовательные прибыльные дни</h3>
               {filteredDays.length > 0 ? (
                 <>
-                  <div className="text-xl font-bold mb-1">
+                  <div className="text-lg sm:text-xl font-bold mb-1">
                     {(() => {
                       let maxStreak = 0;
                       let currentStreak = 0;
@@ -2246,12 +2264,12 @@ const AnalyticsSection = ({
           </div>
           
           {/* Charts Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
             {/* Deposit Growth Chart */}
-            <div className="bg-gray-800 p-4 rounded border border-gray-700">
-              <h3 className="text-lg font-medium mb-4 text-blue-300">Рост депозита</h3>
+            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
+              <h3 className="text-lg font-medium mb-3 sm:mb-4 text-blue-300">Рост депозита</h3>
               {filteredDays.length > 0 && (
-                <div className="h-80">
+                <div className="h-60 sm:h-80">
                   <Line
                     data={{
                       labels: filteredDays.map(day => day.date),
@@ -2281,7 +2299,11 @@ const AnalyticsSection = ({
                         legend: {
                           position: 'top',
                           labels: {
-                            color: 'white'
+                            color: 'white',
+                            boxWidth: 10,
+                            font: {
+                              size: window.innerWidth < 768 ? 10 : 12
+                            }
                           }
                         },
                         tooltip: {
@@ -2294,7 +2316,16 @@ const AnalyticsSection = ({
                           ticks: {
                             color: 'rgba(255, 255, 255, 0.7)',
                             maxRotation: 45,
-                            minRotation: 45
+                            minRotation: 45,
+                            font: {
+                              size: window.innerWidth < 768 ? 8 : 10
+                            },
+                            callback: function(value, index, values) {
+                              // On small screens, show fewer labels
+                              return window.innerWidth < 768 ? 
+                                (index % 2 === 0 ? this.getLabelForValue(value) : '') : 
+                                this.getLabelForValue(value);
+                            }
                           },
                           grid: {
                             color: 'rgba(255, 255, 255, 0.1)'
@@ -2303,6 +2334,9 @@ const AnalyticsSection = ({
                         y: {
                           ticks: {
                             color: 'rgba(255, 255, 255, 0.7)',
+                            font: {
+                              size: window.innerWidth < 768 ? 8 : 10
+                            },
                             callback: function(value) {
                               return '$' + value.toFixed(2);
                             }
@@ -2319,10 +2353,10 @@ const AnalyticsSection = ({
             </div>
             
             {/* Daily Percentage Chart */}
-            <div className="bg-gray-800 p-4 rounded border border-gray-700">
-              <h3 className="text-lg font-medium mb-4 text-blue-300">Процент за день</h3>
+            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
+              <h3 className="text-lg font-medium mb-3 sm:mb-4 text-blue-300">Процент за день</h3>
               {filteredDays.length > 0 && (
-                <div className="h-80">
+                <div className="h-60 sm:h-80">
                   <Bar
                     data={{
                       labels: filteredDays.map(day => day.date),
@@ -2358,7 +2392,11 @@ const AnalyticsSection = ({
                         legend: {
                           position: 'top',
                           labels: {
-                            color: 'white'
+                            color: 'white',
+                            boxWidth: 10,
+                            font: {
+                              size: window.innerWidth < 768 ? 10 : 12
+                            }
                           }
                         },
                         tooltip: {
@@ -2371,7 +2409,16 @@ const AnalyticsSection = ({
                           ticks: {
                             color: 'rgba(255, 255, 255, 0.7)',
                             maxRotation: 45,
-                            minRotation: 45
+                            minRotation: 45,
+                            font: {
+                              size: window.innerWidth < 768 ? 8 : 10
+                            },
+                            callback: function(value, index, values) {
+                              // On small screens, show fewer labels
+                              return window.innerWidth < 768 ? 
+                                (index % 2 === 0 ? this.getLabelForValue(value) : '') : 
+                                this.getLabelForValue(value);
+                            }
                           },
                           grid: {
                             color: 'rgba(255, 255, 255, 0.1)'
@@ -2380,6 +2427,9 @@ const AnalyticsSection = ({
                         y: {
                           ticks: {
                             color: 'rgba(255, 255, 255, 0.7)',
+                            font: {
+                              size: window.innerWidth < 768 ? 8 : 10
+                            },
                             callback: function(value) {
                               return value.toFixed(2) + '%';
                             }
@@ -2397,12 +2447,12 @@ const AnalyticsSection = ({
           </div>
           
           {/* Distribution Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
             {/* Profit/Loss Distribution */}
-            <div className="bg-gray-800 p-4 rounded border border-gray-700">
-              <h3 className="text-lg font-medium mb-4 text-blue-300">Распределение прибыли/убытка</h3>
+            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
+              <h3 className="text-lg font-medium mb-3 sm:mb-4 text-blue-300">Распределение прибыли/убытка</h3>
               {filteredDays.length > 0 && (
-                <div className="h-80">
+                <div className="h-60 sm:h-80">
                   <Pie
                     data={{
                       labels: ['Прибыльные дни', 'Убыточные дни', 'Нейтральные дни'],
@@ -2428,9 +2478,14 @@ const AnalyticsSection = ({
                       maintainAspectRatio: false,
                       plugins: {
                         legend: {
-                          position: 'top',
+                          position: window.innerWidth < 640 ? 'bottom' : 'top',
                           labels: {
-                            color: 'white'
+                            color: 'white',
+                            boxWidth: 10,
+                            font: {
+                              size: window.innerWidth < 768 ? 10 : 12
+                            },
+                            padding: window.innerWidth < 640 ? 8 : 12
                           }
                         },
                         tooltip: {
@@ -2451,10 +2506,10 @@ const AnalyticsSection = ({
             </div>
             
             {/* Performance vs Target */}
-            <div className="bg-gray-800 p-4 rounded border border-gray-700">
-              <h3 className="text-lg font-medium mb-4 text-blue-300">Производительность относительно цели</h3>
+            <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700">
+              <h3 className="text-lg font-medium mb-3 sm:mb-4 text-blue-300">Производительность относительно цели</h3>
               {filteredDays.length > 0 && (
-                <div className="h-80">
+                <div className="h-60 sm:h-80">
                   <Pie
                     data={{
                       labels: ['Выше цели', 'Ниже цели (прибыль)', 'Убыток'],
@@ -2480,9 +2535,14 @@ const AnalyticsSection = ({
                       maintainAspectRatio: false,
                       plugins: {
                         legend: {
-                          position: 'top',
+                          position: window.innerWidth < 640 ? 'bottom' : 'top',
                           labels: {
-                            color: 'white'
+                            color: 'white',
+                            boxWidth: 10,
+                            font: {
+                              size: window.innerWidth < 768 ? 10 : 12
+                            },
+                            padding: window.innerWidth < 640 ? 8 : 12
                           }
                         },
                         tooltip: {
@@ -2504,12 +2564,12 @@ const AnalyticsSection = ({
           </div>
           
           {/* Advanced Analytics */}
-          <div className="bg-gray-800 p-4 rounded border border-gray-700 mb-6">
-            <h3 className="text-lg font-medium mb-4 text-blue-300">Анализ эффективности</h3>
+          <div className="bg-gray-800 p-3 sm:p-4 rounded border border-gray-700 mb-4 sm:mb-6">
+            <h3 className="text-lg font-medium mb-3 sm:mb-4 text-blue-300">Анализ эффективности</h3>
             
             {filteredDays.length > 0 ? (
               <div>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 mb-3 sm:mb-4">
                   <div>
                     <label className="block mb-2 text-sm">Период сравнения:</label>
                     <select 
@@ -2538,8 +2598,8 @@ const AnalyticsSection = ({
                   )}
                 </div>
                 
-                <div className="overflow-x-auto mt-4">
-                  <table className="w-full">
+                <div className="overflow-x-auto mt-3 sm:mt-4">
+                  <table className="w-full min-w-[640px]">
                     <thead>
                       <tr className="bg-gray-700">
                         <th className="p-2 text-left">Показатель</th>
@@ -2738,14 +2798,22 @@ const AnalyticsSection = ({
             )}
           </div>
           
-          <p className="text-gray-400 mb-4">Дополнительные графики и аналитика будут добавлены в следующих обновлениях.</p>
+          <p className="text-gray-400 mb-4 text-sm sm:text-base">Дополнительные графики и аналитика будут добавлены в следующих обновлениях.</p>
         </div>
       ) : (
-        <div className="bg-gray-800 p-6 rounded border border-gray-700 text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="bg-gray-800 p-4 sm:p-6 rounded border border-gray-700 text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
           <p className="text-gray-400 mb-4">У вас пока нет данных для анализа</p>
+          <button 
+            onClick={() => {
+              setActiveSection('dashboard');
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Добавить первую сделку
+          </button>
         </div>
       )}
     </div>

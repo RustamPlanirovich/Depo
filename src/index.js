@@ -1,13 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import DepositTracker from './components/DepositTracker';
+import './styles/macOSTheme.css';
+import App from './App';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('app'));
 root.render(
   <React.StrictMode>
-    <DepositTracker />
+    <App />
   </React.StrictMode>
 );
 

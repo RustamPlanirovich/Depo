@@ -950,151 +950,214 @@ const DepositTracker = () => {
     setNewGoalConsecutiveWins(5);
   };
   
+  // Render the main component
   return (
-    <div className="min-h-screen flex flex-col bg-gray-900 text-white">
-      {/* Navigation */}
-      <Navigation 
-        activeSection={activeSection}
-        setActiveSection={setActiveSection}
-        mobileNavOpen={mobileNavOpen}
-        setMobileNavOpen={setMobileNavOpen}
-      />
-      
-      {/* Main Content */}
-      <main className="flex-grow container mx-auto px-4 py-6">
-        {/* Dashboard Section */}
-        {activeSection === 'dashboard' && (
-          <Dashboard
-            deposit={deposit}
-            leverage={leverage}
-            initialDeposit={initialDeposit}
-            days={days}
-            dailyTarget={dailyTarget}
-            inputMode={inputMode}
-            toggleInputMode={toggleInputMode}
-            newPercentage={newPercentage}
-            handlePercentageChange={handlePercentageChange}
-            newAmount={newAmount}
-            handleAmountChange={handleAmountChange}
-            addDay={addDay}
-            editingDayIndex={editingDayIndex}
-            editingTransactionIndex={editingTransactionIndex}
-            saveEditedDay={saveEditedDay}
-            cancelEditing={cancelEditing}
-          />
-        )}
-        
-        {/* Transactions Section */}
-        {activeSection === 'transactions' && (
-          <Transactions
-            days={days}
-            leverage={leverage}
-            startEditingDay={startEditingDay}
-            archiveDay={archiveDay}
-            archiveTransaction={archiveTransaction}
-            deleteDay={deleteDay}
-            initialDeposit={initialDeposit}
-            deposit={deposit}
+    <div className="deposit-tracker-container" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
+      {/* Mobile navigation toggle button (visible only on mobile) */}
+      <button
+        className="mobile-nav-toggle md:hidden"
+        onClick={() => setMobileNavOpen(!mobileNavOpen)}
+        aria-label="Toggle navigation"
+        style={{ 
+          color: 'var(--color-text-primary)',
+          backgroundColor: 'var(--color-bg-secondary)'
+        }}
+      >
+        {mobileNavOpen ? 'Close Menu' : 'Menu'}
+      </button>
+
+      <div className="deposit-tracker-layout">
+        {/* Side navigation - now styled with macOS design */}
+        <aside className={`mac-sidebar ${mobileNavOpen ? 'mobile-open' : ''}`}>
+          <Navigation
+            activeSection={activeSection}
             setActiveSection={setActiveSection}
+            setMobileNavOpen={setMobileNavOpen}
           />
-        )}
-        
-        {/* Goals Section */}
-        {activeSection === 'goals' && (
-          <Goals
-            goals={goals}
-            showGoalForm={showGoalForm}
-            setShowGoalForm={setShowGoalForm}
-            editingGoalIndex={editingGoalIndex}
-            newGoalName={newGoalName}
-            setNewGoalName={setNewGoalName}
-            newGoalType={newGoalType}
-            setNewGoalType={setNewGoalType}
-            newGoalValue={newGoalValue}
-            setNewGoalValue={setNewGoalValue}
-            newGoalTimeLimit={newGoalTimeLimit}
-            setNewGoalTimeLimit={setNewGoalTimeLimit}
-            newGoalDuration={newGoalDuration}
-            setNewGoalDuration={setNewGoalDuration}
-            newGoalDurationType={newGoalDurationType}
-            setNewGoalDurationType={setNewGoalDurationType}
-            newGoalDeadline={newGoalDeadline}
-            setNewGoalDeadline={setNewGoalDeadline}
-            newGoalDailyTarget={newGoalDailyTarget}
-            setNewGoalDailyTarget={setNewGoalDailyTarget}
-            newGoalConsecutiveWins={newGoalConsecutiveWins}
-            setNewGoalConsecutiveWins={setNewGoalConsecutiveWins}
-            dailyTarget={dailyTarget}
-            addGoal={addGoal}
-            cancelGoalEditing={cancelGoalEditing}
-            editGoal={startEditingGoal}
-            deleteGoal={deleteGoal}
-            calculateGoalProgress={calculateGoalProgress}
-            deposit={deposit}
-            initialDeposit={initialDeposit}
-            days={days}
-            markGoalAsCompleted={markGoalAsCompleted}
-          />
-        )}
-        
-        {/* Analytics Section */}
-        {activeSection === 'analytics' && (
-          <Analytics
-            days={days}
-            initialDeposit={initialDeposit}
-            deposit={deposit}
-            leverage={leverage}
-            dailyTarget={dailyTarget}
-            goals={goals}
-            archivedDays={archivedDays}
-            includeArchived={includeArchived}
-            setIncludeArchived={setIncludeArchived}
-            timeRange={timeRange}
-            setTimeRange={setTimeRange}
-          />
-        )}
-        
-        {/* Archive Section */}
-        {activeSection === 'archive' && (
-          <Archive
-            archivedDays={archivedDays}
-            restoreFromArchive={restoreFromArchive}
-            deleteFromArchive={deleteFromArchive}
-            clearArchive={clearArchive}
-          />
-        )}
-        
-        {/* Settings Section */}
-        {activeSection === 'settings' && (
-          <Settings
-            leverage={leverage}
-            setLeverage={setLeverage}
-            dailyTarget={dailyTarget}
-            setDailyTarget={setDailyTarget}
-            initialDeposit={initialDeposit}
-            setInitialDeposit={setInitialDeposit}
-            deposit={deposit}
-            setDeposit={setDeposit}
-            days={days}
-            setDays={setDays}
-            archivedDays={archivedDays}
-            setArchivedDays={setArchivedDays}
-            goals={goals}
-            setGoals={setGoals}
-            setActiveSection={setActiveSection}
-          />
-        )}
-        
-        {/* Hidden file input for importing data */}
-        <input 
-          type="file" 
-          id="fileInput" 
-          accept=".json" 
-          onChange={importData} 
-          className="hidden" 
-        />
-      </main>
-      
+        </aside>
+
+        {/* Main content area - now with macOS styling */}
+        <main className="main-content-area">
+          {/* Render appropriate section based on active section */}
+          {activeSection === 'dashboard' && (
+            <Dashboard
+              deposit={deposit}
+              initialDeposit={initialDeposit}
+              leverage={leverage}
+              dailyTarget={dailyTarget}
+              days={days}
+              setDeposit={setDeposit}
+              setInitialDeposit={setInitialDeposit}
+              setLeverage={setLeverage}
+              setDailyTarget={setDailyTarget}
+              newPercentage={newPercentage}
+              newAmount={newAmount}
+              inputMode={inputMode}
+              handlePercentageChange={handlePercentageChange}
+              handleAmountChange={handleAmountChange}
+              toggleInputMode={toggleInputMode}
+              addDay={addDay}
+            />
+          )}
+
+          {/* Transactions Section */}
+          {activeSection === 'transactions' && (
+            <Transactions
+              days={days}
+              leverage={leverage}
+              startEditingDay={startEditingDay}
+              archiveDay={archiveDay}
+              archiveTransaction={archiveTransaction}
+              deleteDay={deleteDay}
+              initialDeposit={initialDeposit}
+              deposit={deposit}
+              setActiveSection={setActiveSection}
+            />
+          )}
+          
+          {/* Goals Section */}
+          {activeSection === 'goals' && (
+            <Goals
+              goals={goals}
+              showGoalForm={showGoalForm}
+              setShowGoalForm={setShowGoalForm}
+              editingGoalIndex={editingGoalIndex}
+              newGoalName={newGoalName}
+              setNewGoalName={setNewGoalName}
+              newGoalType={newGoalType}
+              setNewGoalType={setNewGoalType}
+              newGoalValue={newGoalValue}
+              setNewGoalValue={setNewGoalValue}
+              newGoalTimeLimit={newGoalTimeLimit}
+              setNewGoalTimeLimit={setNewGoalTimeLimit}
+              newGoalDuration={newGoalDuration}
+              setNewGoalDuration={setNewGoalDuration}
+              newGoalDurationType={newGoalDurationType}
+              setNewGoalDurationType={setNewGoalDurationType}
+              newGoalDeadline={newGoalDeadline}
+              setNewGoalDeadline={setNewGoalDeadline}
+              newGoalDailyTarget={newGoalDailyTarget}
+              setNewGoalDailyTarget={setNewGoalDailyTarget}
+              newGoalConsecutiveWins={newGoalConsecutiveWins}
+              setNewGoalConsecutiveWins={setNewGoalConsecutiveWins}
+              dailyTarget={dailyTarget}
+              addGoal={addGoal}
+              cancelGoalEditing={cancelGoalEditing}
+              editGoal={startEditingGoal}
+              deleteGoal={deleteGoal}
+              calculateGoalProgress={calculateGoalProgress}
+              deposit={deposit}
+              initialDeposit={initialDeposit}
+              days={days}
+              markGoalAsCompleted={markGoalAsCompleted}
+            />
+          )}
+          
+          {/* Analytics Section */}
+          {activeSection === 'analytics' && (
+            <Analytics
+              days={days}
+              initialDeposit={initialDeposit}
+              deposit={deposit}
+              leverage={leverage}
+              dailyTarget={dailyTarget}
+              goals={goals}
+              archivedDays={archivedDays}
+              includeArchived={includeArchived}
+              setIncludeArchived={setIncludeArchived}
+              timeRange={timeRange}
+              setTimeRange={setTimeRange}
+            />
+          )}
+          
+          {/* Archive Section */}
+          {activeSection === 'archive' && (
+            <Archive
+              archivedDays={archivedDays}
+              restoreFromArchive={restoreFromArchive}
+              deleteFromArchive={deleteFromArchive}
+              clearArchive={clearArchive}
+            />
+          )}
+          
+          {/* Settings Section */}
+          {activeSection === 'settings' && (
+            <Settings
+              leverage={leverage}
+              setLeverage={setLeverage}
+              dailyTarget={dailyTarget}
+              setDailyTarget={setDailyTarget}
+              initialDeposit={initialDeposit}
+              setInitialDeposit={setInitialDeposit}
+              deposit={deposit}
+              setDeposit={setDeposit}
+              days={days}
+              setDays={setDays}
+              archivedDays={archivedDays}
+              setArchivedDays={setArchivedDays}
+              goals={goals}
+              setGoals={setGoals}
+              setActiveSection={setActiveSection}
+            />
+          )}
+        </main>
+      </div>
+
+      {/* Import/Export data dialog */}
+      <Dialog
+        isOpen={dialog.isOpen('importExport')}
+        title="Import/Export Data"
+        onClose={() => dialog.close('importExport')}
+      >
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Import Data</h3>
+          <p className="text-sm">
+            Select a JSON file to import. Note: This will overwrite your current data.
+          </p>
+          <div className="space-y-2">
+            <input
+              type="file"
+              accept=".json"
+              onChange={importData}
+              className="mac-input"
+            />
+          </div>
+
+          <div className="border-t border-gray-700 pt-4 mt-4">
+            <h3 className="text-lg font-medium">Export Data</h3>
+            <p className="text-sm">
+              Export your data as a JSON file for backup or transfer to another device.
+            </p>
+            <button
+              onClick={() => {
+                const data = {
+                  deposit,
+                  leverage,
+                  dailyTarget,
+                  days,
+                  initialDeposit,
+                  archivedDays,
+                  goals
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `deposit-tracker-export-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+              }}
+              className="mac-button mt-2"
+            >
+              Export Data
+            </button>
+          </div>
+        </div>
+      </Dialog>
+
       {/* Dialog */}
       <Dialog
         isOpen={dialog.isOpen}

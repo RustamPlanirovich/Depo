@@ -1,0 +1,363 @@
+/* macOS Theme - Based on the latest macOS UI design */
+
+:root {
+  /* Transition settings */
+  --transition-speed: 0.2s;
+  --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Animation settings */
+  --animation-duration: 0.5s;
+}
+
+/* Light Theme Variables */
+.light-theme {
+  /* Base colors */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f5f5f7;
+  --color-bg-tertiary: #e8e8ed;
+  
+  /* Text colors */
+  --color-text-primary: #1d1d1f;
+  --color-text-secondary: #515154;
+  --color-text-tertiary: #86868b;
+  
+  /* Border colors */
+  --color-border: rgba(0, 0, 0, 0.1);
+  --color-border-light: rgba(0, 0, 0, 0.05);
+  
+  /* Interactive elements */
+  --color-accent: #0071e3;
+  --color-accent-hover: #0077ED;
+  --color-success: #34c759;
+  --color-warning: #ff9f0a;
+  --color-danger: #ff3b30;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.05);
+  
+  /* Special UI elements */
+  --color-card: #ffffff;
+  --color-sidebar: rgba(255, 255, 255, 0.8);
+  --color-toolbar: rgba(245, 245, 247, 0.8);
+  --color-input: #ffffff;
+  --color-dropdown: #ffffff;
+  
+  /* Table colors */
+  --color-table-header: #f5f5f7;
+  --color-table-row-odd: #ffffff;
+  --color-table-row-even: #fafafa;
+  --color-table-row-hover: #f5f5f7;
+}
+
+/* Dark Theme Variables */
+.dark-theme {
+  /* Base colors */
+  --color-bg-primary: #1e1e1e;
+  --color-bg-secondary: #252528;
+  --color-bg-tertiary: #323236;
+  
+  /* Text colors */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a1a1a6;
+  --color-text-tertiary: #6e6e73;
+  
+  /* Border colors */
+  --color-border: rgba(255, 255, 255, 0.15);
+  --color-border-light: rgba(255, 255, 255, 0.08);
+  
+  /* Interactive elements */
+  --color-accent: #0a84ff;
+  --color-accent-hover: #409cff;
+  --color-success: #30d158;
+  --color-warning: #ffd60a;
+  --color-danger: #ff453a;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.2), 0 4px 6px rgba(0, 0, 0, 0.15);
+  
+  /* Special UI elements */
+  --color-card: #252528;
+  --color-sidebar: rgba(30, 30, 30, 0.8);
+  --color-toolbar: rgba(37, 37, 40, 0.8);
+  --color-input: #323236;
+  --color-dropdown: #323236;
+  
+  /* Table colors */
+  --color-table-header: #323236;
+  --color-table-row-odd: #252528;
+  --color-table-row-even: #2c2c30;
+  --color-table-row-hover: #323236;
+}
+
+/* Base element styles */
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  transition: background-color var(--transition-speed) var(--transition-timing),
+              color var(--transition-speed) var(--transition-timing);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* MacOS-style components */
+.mac-card {
+  background-color: var(--color-card);
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border-light);
+  transition: all var(--transition-speed) var(--transition-timing);
+}
+
+.mac-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.mac-sidebar {
+  background-color: var(--color-sidebar);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--color-border);
+}
+
+/* MacOS-style toolbar */
+.mac-toolbar {
+  background-color: var(--color-toolbar);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--color-border);
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+}
+
+/* MacOS-style button */
+.mac-button {
+  background-color: var(--color-accent);
+  color: white;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-speed) var(--transition-timing);
+  font-size: 0.9rem;
+}
+
+.mac-button:hover {
+  background-color: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+.mac-button:active {
+  transform: translateY(0);
+}
+
+/* Secondary button - outlined style */
+.mac-button-secondary {
+  background-color: transparent;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-speed) var(--transition-timing);
+  font-size: 0.9rem;
+}
+
+.mac-button-secondary:hover {
+  background-color: rgba(var(--color-accent-rgb), 0.1);
+}
+
+/* Input style */
+.mac-input {
+  background-color: var(--color-input);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  transition: all var(--transition-speed) var(--transition-timing);
+  width: 100%;
+}
+
+.mac-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(var(--color-accent-rgb), 0.3);
+}
+
+/* Toggle switch for theme */
+.mac-toggle {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 28px;
+}
+
+.mac-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.mac-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-bg-tertiary);
+  transition: 0.3s;
+  border-radius: 28px;
+  border: 1px solid var(--color-border);
+}
+
+.mac-toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 2px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+input:checked + .mac-toggle-slider {
+  background-color: var(--color-accent);
+}
+
+input:checked + .mac-toggle-slider:before {
+  transform: translateX(20px);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Animation classes */
+.fade-in {
+  animation: fadeIn var(--animation-duration) var(--transition-timing);
+}
+
+.slide-up {
+  animation: slideUp var(--animation-duration) var(--transition-timing);
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Dollar value animation */
+@keyframes numberChange {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  51% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.number-change {
+  display: inline-block;
+  animation: numberChange 0.5s ease-out;
+}
+
+/* Progress bar animation */
+@keyframes progressFill {
+  from {
+    width: 0%;
+  }
+}
+
+.animated-progress-bar {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: var(--color-bg-tertiary);
+}
+
+.animated-progress-bar-fill {
+  position: absolute;
+  height: 100%;
+  background-color: var(--color-accent);
+  border-radius: 4px;
+  animation: progressFill 1s ease-out forwards;
+}
+
+/* Percentage change animation */
+@keyframes percentageChange {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+    color: var(--color-success);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.percentage-increase {
+  animation: percentageChange 0.5s var(--transition-timing);
+  color: var(--color-success);
+}
+
+.percentage-decrease {
+  animation: percentageChange 0.5s var(--transition-timing);
+  color: var(--color-danger);
+} 

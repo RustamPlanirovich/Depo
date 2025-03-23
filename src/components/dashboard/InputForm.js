@@ -5,6 +5,7 @@ import AnimatedValue from '../common/AnimatedValue';
 
 /**
  * InputForm component - form for adding new trading days with macOS styling
+ * Переведено на русский язык
  */
 const InputForm = ({
   deposit,
@@ -34,31 +35,31 @@ const InputForm = ({
   const unleveragedPercentage = parseFloat(newPercentage) || 0;
   
   return (
-    <div className="mac-card slide-up">
+    <div className="mac-card slide-up" style={{ backgroundColor: 'var(--color-card)', color: 'var(--color-text-primary)' }}>
       <h2 className="text-xl font-medium mb-6" style={{ color: 'var(--color-accent)' }}>
-        {editingDayIndex !== null ? 'Edit Day' : 'Add New Day'}
+        {editingDayIndex !== null ? 'Редактировать день' : 'Добавить новый день'}
       </h2>
       
       <div className="mb-4">
         <div className="flex justify-between items-center mb-4">
-          <label style={{ color: 'var(--color-text-secondary)' }}>Input Mode:</label>
+          <label style={{ color: 'var(--color-text-secondary)' }}>Режим ввода:</label>
           <button
             onClick={toggleInputMode}
             className="mac-button-secondary flex items-center"
           >
             <FiRefreshCw className="mr-2" />
-            {inputMode === 'percentage' ? 'Switch to Amount' : 'Switch to Percentage'}
+            {inputMode === 'percentage' ? 'Переключить на сумму' : 'Переключить на процент'}
           </button>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Percentage Input */}
           {inputMode === 'percentage' ? (
-            <div className="mac-card">
+            <div className="mac-card" style={{ backgroundColor: 'var(--color-card)', color: 'var(--color-text-primary)' }}>
               <label className="block mb-2 font-medium" style={{ color: 'var(--color-text-secondary)' }}>
                 <div className="flex items-center">
                   <FiPercent className="mr-2" />
-                  Percentage:
+                  Процент:
                 </div>
               </label>
               <div className="relative">
@@ -67,7 +68,7 @@ const InputForm = ({
                   value={newPercentage}
                   onChange={handlePercentageChange}
                   className="mac-input"
-                  placeholder="Enter percentage"
+                  placeholder="Введите процент"
                   step="0.01"
                 />
                 <span className="absolute right-3 top-3" style={{ color: 'var(--color-text-tertiary)' }}>%</span>
@@ -76,23 +77,23 @@ const InputForm = ({
               {newPercentage && (
                 <div className="mt-4 space-y-2 p-3 rounded-lg" style={{ backgroundColor: 'var(--color-bg-tertiary)' }}>
                   <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                    <span style={{ color: 'var(--color-text-tertiary)' }}>Deposit Percentage:</span> {unleveragedPercentage.toFixed(2)}%
+                    <span style={{ color: 'var(--color-text-tertiary)' }}>Процент депозита:</span> {unleveragedPercentage.toFixed(2)}%
                   </div>
                   <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                    <span style={{ color: 'var(--color-text-tertiary)' }}>Base Amount:</span> ${unleveragedAmount ? unleveragedAmount.toFixed(2) : '0.00'}
+                    <span style={{ color: 'var(--color-text-tertiary)' }}>Базовая сумма:</span> ${unleveragedAmount ? unleveragedAmount.toFixed(2) : '0.00'}
                   </div>
                   <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                    <span style={{ color: 'var(--color-text-tertiary)' }}>With {leverage}x Leverage:</span> ${calculatedAmount ? calculatedAmount.toFixed(2) : '0.00'}
+                    <span style={{ color: 'var(--color-text-tertiary)' }}>С {leverage}x плечом:</span> ${calculatedAmount ? calculatedAmount.toFixed(2) : '0.00'}
                   </div>
                 </div>
               )}
             </div>
           ) : (
-            <div className="mac-card">
+            <div className="mac-card" style={{ backgroundColor: 'var(--color-card)', color: 'var(--color-text-primary)' }}>
               <label className="block mb-2 font-medium" style={{ color: 'var(--color-text-secondary)' }}>
                 <div className="flex items-center">
                   <FiDollarSign className="mr-2" />
-                  Amount:
+                  Сумма:
                 </div>
               </label>
               <div className="relative">
@@ -102,7 +103,7 @@ const InputForm = ({
                   value={newAmount}
                   onChange={handleAmountChange}
                   className="mac-input pl-8"
-                  placeholder="Enter amount"
+                  placeholder="Введите сумму"
                   step="0.01"
                 />
               </div>
@@ -110,13 +111,13 @@ const InputForm = ({
               {newAmount && (
                 <div className="mt-4 space-y-2 p-3 rounded-lg" style={{ backgroundColor: 'var(--color-bg-tertiary)' }}>
                   <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                    <span style={{ color: 'var(--color-text-tertiary)' }}>With {leverage}x Leverage:</span> ${parseFloat(newAmount).toFixed(2)}
+                    <span style={{ color: 'var(--color-text-tertiary)' }}>С {leverage}x плечом:</span> ${parseFloat(newAmount).toFixed(2)}
                   </div>
                   <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                    <span style={{ color: 'var(--color-text-tertiary)' }}>Without Leverage:</span> ${(parseFloat(newAmount) / leverage).toFixed(2)}
+                    <span style={{ color: 'var(--color-text-tertiary)' }}>Без плеча:</span> ${(parseFloat(newAmount) / leverage).toFixed(2)}
                   </div>
                   <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                    <span style={{ color: 'var(--color-text-tertiary)' }}>Deposit Percentage:</span> {calculatedPercentage ? calculatedPercentage.toFixed(2) : '0.00'}%
+                    <span style={{ color: 'var(--color-text-tertiary)' }}>Процент депозита:</span> {calculatedPercentage ? calculatedPercentage.toFixed(2) : '0.00'}%
                   </div>
                 </div>
               )}
@@ -124,19 +125,19 @@ const InputForm = ({
           )}
           
           {/* Information Block */}
-          <div className="mac-card">
-            <div className="font-medium mb-4" style={{ color: 'var(--color-text-primary)' }}>Trading Information</div>
+          <div className="mac-card" style={{ backgroundColor: 'var(--color-card)', color: 'var(--color-text-primary)' }}>
+            <div className="font-medium mb-4" style={{ color: 'var(--color-text-primary)' }}>Торговая информация</div>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span style={{ color: 'var(--color-text-secondary)' }}>Current Deposit:</span>
+                <span style={{ color: 'var(--color-text-secondary)' }}>Текущий депозит:</span>
                 <AnimatedValue value={deposit} type="money" className="font-medium" />
               </div>
               <div className="flex justify-between items-center">
-                <span style={{ color: 'var(--color-text-secondary)' }}>Leverage:</span>
+                <span style={{ color: 'var(--color-text-secondary)' }}>Кредитное плечо:</span>
                 <span className="font-medium">{leverage}x</span>
               </div>
               <div className="flex justify-between items-center">
-                <span style={{ color: 'var(--color-text-secondary)' }}>Trading Capacity:</span>
+                <span style={{ color: 'var(--color-text-secondary)' }}>Торговый объем:</span>
                 <AnimatedValue value={deposit * leverage} type="money" className="font-medium" />
               </div>
             </div>
@@ -150,7 +151,7 @@ const InputForm = ({
             onClick={cancelEditing}
             className="mac-button-secondary"
           >
-            Cancel
+            Отмена
           </button>
         )}
         
@@ -158,7 +159,7 @@ const InputForm = ({
           onClick={editingDayIndex !== null ? saveEditedDay : addDay}
           className="mac-button"
         >
-          {editingDayIndex !== null ? 'Save Changes' : 'Add Day'}
+          {editingDayIndex !== null ? 'Сохранить изменения' : 'Добавить день'}
         </button>
       </div>
     </div>

@@ -35,7 +35,7 @@ const Goals = ({
   dailyTarget,
   addGoal,
   cancelGoalEditing,
-  editGoal,
+  startEditingGoal,
   deleteGoal,
   calculateGoalProgress,
   markGoalAsCompleted
@@ -93,7 +93,7 @@ const Goals = ({
         <div>
           <GoalList
             goals={goals}
-            editGoal={editGoal}
+            startEditingGoal={startEditingGoal}
             deleteGoal={deleteGoal}
             calculateGoalProgress={calculateGoalProgress}
             deposit={deposit}

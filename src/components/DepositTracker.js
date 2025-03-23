@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import useLocalStorage from '../hooks/useLocalStorage';
 import useDialog from '../hooks/useDialog';
 import Dialog from './common/Dialog';
 import Navigation from './common/Navigation';
@@ -12,19 +11,21 @@ import Settings from './settings/Settings';
 import { readFileAsJson, validateImportedData } from '../utils/dataOperations';
 import { calculateAmountFromPercentage, calculatePercentageFromAmount } from '../utils/calculations';
 import { calculateGoalProgress, isGoalExpired } from '../utils/goals';
+import { loadData, saveDataThrottled } from '../utils/fileStorage';
 
 /**
  * Main DepositTracker component
  */
 const DepositTracker = () => {
-  // State management with localStorage persistence
-  const [deposit, setDeposit] = useLocalStorage('deposit', 30);
-  const [leverage, setLeverage] = useLocalStorage('leverage', 10);
-  const [dailyTarget, setDailyTarget] = useLocalStorage('dailyTarget', 3);
-  const [days, setDays] = useLocalStorage('days', []);
-  const [initialDeposit, setInitialDeposit] = useLocalStorage('initialDeposit', 30);
-  const [archivedDays, setArchivedDays] = useLocalStorage('archivedDays', []);
-  const [goals, setGoals] = useLocalStorage('goals', []);
+  // State management with file storage instead of localStorage
+  const [deposit, setDeposit] = useState(30);
+  const [leverage, setLeverage] = useState(10);
+  const [dailyTarget, setDailyTarget] = useState(3);
+  const [days, setDays] = useState([]);
+  const [initialDeposit, setInitialDeposit] = useState(30);
+  const [archivedDays, setArchivedDays] = useState([]);
+  const [goals, setGoals] = useState([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
   
   // Local state management
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -34,6 +35,7 @@ const DepositTracker = () => {
   const [editingDayIndex, setEditingDayIndex] = useState(null);
   const [editingTransactionIndex, setEditingTransactionIndex] = useState(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   // Analytics section state
   const [includeArchived, setIncludeArchived] = useState(false);
@@ -54,6 +56,42 @@ const DepositTracker = () => {
   const [newGoalDeadline, setNewGoalDeadline] = useState('');
   const [newGoalDailyTarget, setNewGoalDailyTarget] = useState(dailyTarget);
   const [newGoalConsecutiveWins, setNewGoalConsecutiveWins] = useState(5);
+  
+  // Load data from file on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await loadData();
+      if (data) {
+        setDeposit(data.deposit || 30);
+        setLeverage(data.leverage || 10);
+        setDailyTarget(data.dailyTarget || 3);
+        setDays(data.days || []);
+        setInitialDeposit(data.initialDeposit || 30);
+        setArchivedDays(data.archivedDays || []);
+        setGoals(data.goals || []);
+      }
+      setDataLoaded(true);
+    };
+    
+    fetchData();
+  }, []);
+  
+  // Save data to file when state changes
+  useEffect(() => {
+    if (!dataLoaded) return;
+    
+    const data = {
+      deposit,
+      leverage,
+      dailyTarget,
+      days,
+      initialDeposit,
+      archivedDays,
+      goals
+    };
+    
+    saveDataThrottled(data);
+  }, [deposit, leverage, dailyTarget, days, initialDeposit, archivedDays, goals, dataLoaded]);
   
   // Check and update goals status on app load and when days change
   useEffect(() => {
@@ -967,17 +1005,21 @@ const DepositTracker = () => {
       </button>
 
       <div className="deposit-tracker-layout">
-        {/* Side navigation - now styled with macOS design */}
-        <aside className={`mac-sidebar ${mobileNavOpen ? 'mobile-open' : ''}`}>
+        {/* Sidebar */}
+        <aside className={`mac-sidebar ${mobileNavOpen ? 'mobile-open' : ''}`} style={{ 
+          width: sidebarCollapsed ? '64px' : '240px'
+        }}>
           <Navigation
             activeSection={activeSection}
             setActiveSection={setActiveSection}
             setMobileNavOpen={setMobileNavOpen}
+            sidebarCollapsed={sidebarCollapsed}
+            setSidebarCollapsed={setSidebarCollapsed}
           />
         </aside>
-
-        {/* Main content area - now with macOS styling */}
-        <main className="main-content-area">
+        
+        {/* Main Content */}
+        <main className={`main-content-area ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
           {/* Render appropriate section based on active section */}
           {activeSection === 'dashboard' && (
             <Dashboard
@@ -997,6 +1039,10 @@ const DepositTracker = () => {
               handleAmountChange={handleAmountChange}
               toggleInputMode={toggleInputMode}
               addDay={addDay}
+              editingDayIndex={editingDayIndex}
+              editingTransactionIndex={editingTransactionIndex}
+              saveEditedDay={saveEditedDay}
+              cancelEditing={cancelEditing}
             />
           )}
 
@@ -1043,7 +1089,7 @@ const DepositTracker = () => {
               dailyTarget={dailyTarget}
               addGoal={addGoal}
               cancelGoalEditing={cancelGoalEditing}
-              editGoal={startEditingGoal}
+              startEditingGoal={startEditingGoal}
               deleteGoal={deleteGoal}
               calculateGoalProgress={calculateGoalProgress}
               deposit={deposit}
@@ -1105,9 +1151,9 @@ const DepositTracker = () => {
 
       {/* Import/Export data dialog */}
       <Dialog
-        isOpen={dialog.isOpen('importExport')}
+        isOpen={dialog.isOpen}
         title="Import/Export Data"
-        onClose={() => dialog.close('importExport')}
+        onClose={dialog.handleClose}
       >
         <div className="space-y-4">
           <h3 className="text-lg font-medium">Import Data</h3>

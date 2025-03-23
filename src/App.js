@@ -5,6 +5,7 @@ import './styles/App.css';
 
 /**
  * Main App component with theme switching capability
+ * Теперь с русским интерфейсом
  */
 const App = () => {
   return (

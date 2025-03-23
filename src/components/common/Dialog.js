@@ -14,8 +14,6 @@ import { FiX } from 'react-icons/fi';
 const Dialog = ({ isOpen, title, message, options = ['OK'], onClose, onOptionSelect, children }) => {
   const dialogRef = useRef(null);
   
-  if (!isOpen) return null;
-
   // Handle option click
   const handleOptionClick = (option) => {
     if (onOptionSelect) {
@@ -51,6 +49,9 @@ const Dialog = ({ isOpen, title, message, options = ['OK'], onClose, onOptionSel
       document.removeEventListener('keydown', handleEscape);
     };
   }, [isOpen, onClose]);
+  
+  // Early return after all hooks are called
+  if (!isOpen) return null;
 
   return (
     <div

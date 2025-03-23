@@ -1,0 +1,60 @@
+{
+  "deposit": 39.93,
+  "leverage": 10,
+  "dailyTarget": 3,
+  "days": [
+    {
+      "day": 1,
+      "date": "2025-03-23",
+      "percentage": 3.31,
+      "amount": 9.93,
+      "deposit": 39.93,
+      "transactions": [
+        {
+          "percentage": 1,
+          "amount": 3,
+          "timestamp": "2025-03-23T10:01:09.965Z"
+        },
+        {
+          "percentage": 1,
+          "amount": 3.3000000000000003,
+          "timestamp": "2025-03-23T10:01:21.514Z"
+        },
+        {
+          "percentage": 1,
+          "amount": 3.63,
+          "timestamp": "2025-03-23T10:01:23.267Z"
+        }
+      ]
+    }
+  ],
+  "initialDeposit": 30,
+  "archivedDays": [
+    {
+      "day": 1,
+      "date": "2025-03-23",
+      "percentage": 2.504382669671926,
+      "amount": 10,
+      "deposit": 49.93,
+      "transactions": [
+        {
+          "percentage": 2.504382669671926,
+          "amount": 10,
+          "timestamp": "2025-03-23T10:03:53.347Z"
+        }
+      ]
+    }
+  ],
+  "goals": [
+    {
+      "name": "йцууйц",
+      "type": "deposit",
+      "value": "100",
+      "completed": false,
+      "autoCheck": true,
+      "timeLimit": true,
+      "startDate": "2025-03-23",
+      "deadline": "2025-04-22"
+    }
+  ]
+}

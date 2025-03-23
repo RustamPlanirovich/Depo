@@ -8,6 +8,7 @@ import { FiDollarSign, FiTrendingUp, FiTarget } from 'react-icons/fi';
 
 /**
  * Dashboard component - main page with key metrics and transaction form
+ * Переведено на русский язык
  */
 const Dashboard = ({
   deposit,
@@ -66,28 +67,28 @@ const Dashboard = ({
   
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold mb-8" style={{ color: 'var(--color-text-primary)' }}>Dashboard</h1>
+      <h1 className="text-2xl font-bold mb-8" style={{ color: 'var(--color-text-primary)' }}>Панель управления</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Current Deposit Card */}
-        <div className="mac-card fade-in">
+        <div className="mac-card fade-in" style={{ backgroundColor: 'var(--color-card)', color: 'var(--color-text-primary)' }}>
           <div className="flex items-center mb-4">
             <FiDollarSign className="mr-2 text-xl" style={{ color: 'var(--color-accent)' }} />
-            <h2 className="text-lg font-medium" style={{ color: 'var(--color-accent)' }}>Current Deposit</h2>
+            <h2 className="text-lg font-medium" style={{ color: 'var(--color-accent)' }}>Текущий депозит</h2>
           </div>
           <div className="text-3xl font-bold mb-2">
             <AnimatedValue value={deposit} type="money" />
           </div>
           <div className="mt-2" style={{ color: 'var(--color-text-tertiary)' }}>
-            Initial Deposit: <AnimatedValue value={initialDeposit} type="money" />
+            Начальный депозит: <AnimatedValue value={initialDeposit} type="money" />
           </div>
         </div>
         
         {/* Total Growth Card */}
-        <div className="mac-card fade-in">
+        <div className="mac-card fade-in" style={{ backgroundColor: 'var(--color-card)', color: 'var(--color-text-primary)' }}>
           <div className="flex items-center mb-4">
             <FiTrendingUp className="mr-2 text-xl" style={{ color: 'var(--color-accent)' }} />
-            <h2 className="text-lg font-medium" style={{ color: 'var(--color-accent)' }}>Total Growth</h2>
+            <h2 className="text-lg font-medium" style={{ color: 'var(--color-accent)' }}>Общий рост</h2>
           </div>
           <div className="text-3xl font-bold mb-2">
             <AnimatedValue 
@@ -98,7 +99,7 @@ const Dashboard = ({
           </div>
           <div className="flex justify-between items-center">
             <span style={{ color: 'var(--color-text-tertiary)' }}>
-              Total Percentage:
+              Общий процент:
             </span>
             <AnimatedValue 
               value={totalGrowthPercentage} 
@@ -115,23 +116,23 @@ const Dashboard = ({
         </div>
         
         {/* Daily Target Card */}
-        <div className={`mac-card fade-in ${goalAchieved ? 'pulse' : ''}`}>
+        <div className={`mac-card fade-in ${goalAchieved ? 'pulse' : ''}`} style={{ backgroundColor: 'var(--color-card)', color: 'var(--color-text-primary)' }}>
           <div className="flex items-center mb-4">
             <FiTarget className="mr-2 text-xl" style={{ color: 'var(--color-accent)' }} />
-            <h2 className="text-lg font-medium" style={{ color: 'var(--color-accent)' }}>Daily Target</h2>
+            <h2 className="text-lg font-medium" style={{ color: 'var(--color-accent)' }}>Дневная цель</h2>
           </div>
           <div className="text-3xl font-bold mb-2">
             <AnimatedValue value={dailyTarget} type="percentage" />
           </div>
           <div className="flex justify-between items-center mb-2">
             <span style={{ color: 'var(--color-text-tertiary)' }}>
-              Target Amount:
+              Целевая сумма:
             </span>
             <AnimatedValue value={dailyTargetAmount} type="money" />
           </div>
           <div className="flex justify-between items-center">
             <span style={{ color: 'var(--color-text-tertiary)' }}>
-              Leverage:
+              Кредитное плечо:
             </span>
             <span className="font-medium">{leverage}x</span>
           </div>
@@ -141,7 +142,7 @@ const Dashboard = ({
               color: 'white',
               fontWeight: 'medium'
             }}>
-              ✓ Target Achieved Today
+              ✓ Цель на сегодня достигнута
             </div>
           )}
         </div>
@@ -175,17 +176,17 @@ const Dashboard = ({
       
       {/* Recent Transactions */}
       {days.length > 0 && (
-        <div className="mac-card slide-up">
-          <h2 className="text-xl font-medium mb-6" style={{ color: 'var(--color-accent)' }}>Recent Transactions</h2>
+        <div className="mac-card slide-up" style={{ backgroundColor: 'var(--color-card)', color: 'var(--color-text-primary)' }}>
+          <h2 className="text-xl font-medium mb-6" style={{ color: 'var(--color-accent)' }}>Последние транзакции</h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr>
-                  <th className="py-3 text-left" style={{ color: 'var(--color-text-secondary)' }}>Day</th>
-                  <th className="py-3 text-left" style={{ color: 'var(--color-text-secondary)' }}>Date</th>
-                  <th className="py-3 text-right" style={{ color: 'var(--color-text-secondary)' }}>Percentage</th>
-                  <th className="py-3 text-right" style={{ color: 'var(--color-text-secondary)' }}>Amount</th>
-                  <th className="py-3 text-right" style={{ color: 'var(--color-text-secondary)' }}>Deposit</th>
+                  <th className="py-3 text-left" style={{ color: 'var(--color-text-secondary)' }}>День</th>
+                  <th className="py-3 text-left" style={{ color: 'var(--color-text-secondary)' }}>Дата</th>
+                  <th className="py-3 text-right" style={{ color: 'var(--color-text-secondary)' }}>Процент</th>
+                  <th className="py-3 text-right" style={{ color: 'var(--color-text-secondary)' }}>Сумма</th>
+                  <th className="py-3 text-right" style={{ color: 'var(--color-text-secondary)' }}>Депозит</th>
                 </tr>
               </thead>
               <tbody>

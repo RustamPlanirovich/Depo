@@ -4,6 +4,7 @@ import { FiSun, FiMoon, FiMonitor } from 'react-icons/fi';
 
 /**
  * A macOS style theme switcher that toggles between light, dark, and system modes
+ * Переключатель темы в стиле macOS
  */
 const ThemeSwitch = () => {
   const { theme, themePreference, toggleTheme } = useTheme();
@@ -22,6 +23,20 @@ const ThemeSwitch = () => {
     }
   };
   
+  // Get the theme name in Russian
+  const getThemeName = () => {
+    switch (themePreference) {
+      case 'light':
+        return 'Светлая';
+      case 'dark':
+        return 'Тёмная';
+      case 'system':
+        return 'Системная';
+      default:
+        return 'Светлая';
+    }
+  };
+  
   return (
     <div className="flex items-center">
       <button 
@@ -31,12 +46,12 @@ const ThemeSwitch = () => {
           backgroundColor: 'var(--color-bg-tertiary)',
           color: 'var(--color-text-primary)'
         }}
-        aria-label="Toggle theme"
+        aria-label="Переключить тему"
       >
         {getThemeIcon()}
       </button>
       <div className="ml-2 text-sm hidden sm:block">
-        {themePreference.charAt(0).toUpperCase() + themePreference.slice(1)}
+        {getThemeName()}
       </div>
     </div>
   );

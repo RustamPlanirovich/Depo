@@ -495,42 +495,122 @@ const DepositTracker = () => {
   
   // Restore from archive
   const restoreFromArchive = async (index) => {
+    const archivedItem = archivedDays[index];
+    const isTransaction = archivedItem.transactions && archivedItem.transactions.length === 1 && archivedItem.transactions[0].timestamp;
+    
+    const message = isTransaction 
+      ? `Вы уверены, что хотите восстановить сделку (${archivedItem.percentage.toFixed(2)}%) за ${archivedItem.date}?`
+      : `Вы уверены, что хотите восстановить день ${archivedItem.day} из архива?`;
+    
     const result = await dialog.createPromiseDialog(
       'Восстановление из архива',
-      `Вы уверены, что хотите восстановить день ${archivedDays[index].day} из архива?`,
+      message,
       ['Да', 'Нет']
     );
     
     if (result === 'Да') {
-      // Create a new day with the next day number
-      const dayToRestore = { 
-        ...archivedDays[index],
-        day: days.length + 1
-      };
-      
-      // Sort days by date
-      const allDays = [...days, dayToRestore].sort((a, b) => {
-        return new Date(a.date) - new Date(b.date);
-      });
-      
-      // Recalculate day numbers and deposits
-      let currentDeposit = initialDeposit;
-      const recalculatedDays = allDays.map((day, i) => {
-        currentDeposit += day.amount;
-        return {
-          ...day,
-          day: i + 1,
-          deposit: currentDeposit
+      if (isTransaction) {
+        // This is a single transaction - need to restore it to its original day
+        const transaction = archivedItem.transactions[0];
+        const updatedDays = [...days];
+        
+        // Find if the original day exists by date
+        const originalDayIndex = updatedDays.findIndex(day => day.date === archivedItem.date);
+        
+        if (originalDayIndex !== -1) {
+          // Day exists - add the transaction to it
+          const originalDay = updatedDays[originalDayIndex];
+          
+          // Make sure the day has a transactions array
+          if (!originalDay.transactions) {
+            originalDay.transactions = [{ 
+              amount: originalDay.amount,
+              percentage: originalDay.percentage,
+              timestamp: null
+            }];
+          }
+          
+          // Add the restored transaction
+          originalDay.transactions.push(transaction);
+          
+          // Recalculate the day's totals
+          const totalAmount = originalDay.transactions.reduce((sum, t) => sum + t.amount, 0);
+          const baseDeposit = originalDayIndex > 0 
+            ? updatedDays[originalDayIndex - 1].deposit 
+            : initialDeposit;
+          const totalPercentage = calculatePercentageFromAmount(baseDeposit, totalAmount, leverage);
+          
+          // Update the day
+          originalDay.amount = totalAmount;
+          originalDay.percentage = totalPercentage;
+          
+          // Update the deposit for this day and all subsequent days
+          let currentDeposit = baseDeposit;
+          for (let i = originalDayIndex; i < updatedDays.length; i++) {
+            currentDeposit += updatedDays[i].amount;
+            updatedDays[i].deposit = currentDeposit;
+          }
+          
+          // Update state
+          setDays(updatedDays);
+          setDeposit(currentDeposit);
+        } else {
+          // The day doesn't exist - create a new day with this transaction
+          const dayToRestore = { 
+            ...archivedItem,
+            day: days.length + 1
+          };
+          
+          // Sort days by date
+          const allDays = [...days, dayToRestore].sort((a, b) => {
+            return new Date(a.date) - new Date(b.date);
+          });
+          
+          // Recalculate day numbers and deposits
+          let currentDeposit = initialDeposit;
+          const recalculatedDays = allDays.map((day, i) => {
+            currentDeposit += day.amount;
+            return {
+              ...day,
+              day: i + 1,
+              deposit: currentDeposit
+            };
+          });
+          
+          setDays(recalculatedDays);
+          setDeposit(currentDeposit);
+        }
+      } else {
+        // This is a full day - restore as before
+        const dayToRestore = { 
+          ...archivedItem,
+          day: days.length + 1
         };
-      });
+        
+        // Sort days by date
+        const allDays = [...days, dayToRestore].sort((a, b) => {
+          return new Date(a.date) - new Date(b.date);
+        });
+        
+        // Recalculate day numbers and deposits
+        let currentDeposit = initialDeposit;
+        const recalculatedDays = allDays.map((day, i) => {
+          currentDeposit += day.amount;
+          return {
+            ...day,
+            day: i + 1,
+            deposit: currentDeposit
+          };
+        });
+        
+        setDays(recalculatedDays);
+        setDeposit(currentDeposit);
+      }
       
       // Remove from archive
       const updatedArchive = [...archivedDays];
       updatedArchive.splice(index, 1);
-      
-      setDays(recalculatedDays);
       setArchivedDays(updatedArchive);
-      setDeposit(currentDeposit);
     }
   };
   

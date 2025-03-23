@@ -835,48 +835,152 @@ const DepositTracker = () => {
 
   // Функция для восстановления дня из архива
   const restoreFromArchive = (index) => {
-    // Получаем день для восстановления
-    const dayToRestore = {...archivedDays[index]};
+    // Получаем архивную запись
+    const archivedItem = archivedDays[index];
     
-    // Удаляем поле даты архивирования
-    delete dayToRestore.archiveDate;
+    // Проверяем, является ли это отдельной транзакцией
+    const isTransaction = archivedItem.transactions && archivedItem.transactions.length === 1 && archivedItem.transactions[0].timestamp;
     
-    // Добавляем день в основной массив
-    const newDays = [...days, dayToRestore];
-    
-    // Сортируем дни по дате
-    newDays.sort((a, b) => {
-      const dateComparison = new Date(a.date) - new Date(b.date);
-      if (dateComparison !== 0) return dateComparison;
+    // Запрашиваем подтверждение
+    const message = isTransaction 
+      ? `Вы уверены, что хотите восстановить сделку (${archivedItem.percentage.toFixed(2)}%) за ${archivedItem.date}?`
+      : `Вы уверены, что хотите восстановить день ${archivedItem.day} из архива?`;
       
-      // Если даты одинаковые, сортируем по проценту
-      return a.percentage - b.percentage;
-    });
+    if (!window.confirm(message)) {
+      return;
+    }
     
-    // Перенумеровываем дни
-    const renumberedDays = newDays.map((day, idx) => ({
-      ...day,
-      day: idx + 1
-    }));
-    
-    // Пересчитываем депозит для всех дней
-    let currentDeposit = initialDeposit;
-    const recalculatedDays = renumberedDays.map(day => {
-      // Рассчитываем прибыль
-      const profitAmount = (currentDeposit * leverage) * (day.percentage / 100);
-      // Обновляем депозит
-      currentDeposit += profitAmount;
+    if (isTransaction) {
+      // Это отдельная транзакция - нужно восстановить в оригинальный день
+      const transaction = archivedItem.transactions[0];
+      const updatedDays = [...days];
       
-      return {
+      // Ищем оригинальный день по дате
+      const originalDayIndex = updatedDays.findIndex(day => day.date === archivedItem.date);
+      
+      if (originalDayIndex !== -1) {
+        // День существует - добавляем транзакцию к нему
+        const originalDay = updatedDays[originalDayIndex];
+        
+        // Убеждаемся, что у дня есть массив транзакций
+        if (!originalDay.transactions) {
+          originalDay.transactions = [{ 
+            amount: originalDay.amount,
+            percentage: originalDay.percentage,
+            timestamp: null
+          }];
+        }
+        
+        // Добавляем восстановленную транзакцию
+        originalDay.transactions.push(transaction);
+        
+        // Пересчитываем итоги дня
+        const totalAmount = originalDay.transactions.reduce((sum, t) => sum + t.amount, 0);
+        const baseDeposit = originalDayIndex > 0 
+          ? updatedDays[originalDayIndex - 1].deposit 
+          : initialDeposit;
+        
+        // Рассчитываем общий процент
+        originalDay.amount = totalAmount;
+        originalDay.percentage = (totalAmount / (baseDeposit * leverage)) * 100;
+        
+        // Обновляем депозит для этого дня и всех последующих
+        let currentDeposit = baseDeposit;
+        for (let i = originalDayIndex; i < updatedDays.length; i++) {
+          // Добавляем сумму текущего дня к депозиту
+          currentDeposit += updatedDays[i].amount;
+          updatedDays[i].deposit = currentDeposit;
+        }
+        
+        // Обновляем состояние
+        setDays(updatedDays);
+        setDeposit(currentDeposit);
+      } else {
+        // День не существует - создаем новый день с этой транзакцией
+        const dayToRestore = {...archivedItem};
+        delete dayToRestore.archiveDate;
+        
+        // Добавляем день в основной массив и обрабатываем как обычный день
+        const newDays = [...days, dayToRestore];
+        
+        // Сортируем дни по дате
+        newDays.sort((a, b) => {
+          const dateComparison = new Date(a.date) - new Date(b.date);
+          if (dateComparison !== 0) return dateComparison;
+          
+          // Если даты одинаковые, сортируем по проценту
+          return a.percentage - b.percentage;
+        });
+        
+        // Перенумеровываем дни
+        const renumberedDays = newDays.map((day, idx) => ({
+          ...day,
+          day: idx + 1
+        }));
+        
+        // Пересчитываем депозит для всех дней
+        let currentDeposit = initialDeposit;
+        const recalculatedDays = renumberedDays.map(day => {
+          // Рассчитываем прибыль
+          const profitAmount = (currentDeposit * leverage) * (day.percentage / 100);
+          // Обновляем депозит
+          currentDeposit += profitAmount;
+          
+          return {
+            ...day,
+            amount: profitAmount,
+            deposit: currentDeposit
+          };
+        });
+        
+        // Обновляем состояние
+        setDays(recalculatedDays);
+        setDeposit(recalculatedDays[recalculatedDays.length - 1].deposit);
+      }
+    } else {
+      // Получаем день для восстановления (полный день)
+      const dayToRestore = {...archivedItem};
+      
+      // Удаляем поле даты архивирования
+      delete dayToRestore.archiveDate;
+      
+      // Добавляем день в основной массив
+      const newDays = [...days, dayToRestore];
+      
+      // Сортируем дни по дате
+      newDays.sort((a, b) => {
+        const dateComparison = new Date(a.date) - new Date(b.date);
+        if (dateComparison !== 0) return dateComparison;
+        
+        // Если даты одинаковые, сортируем по проценту
+        return a.percentage - b.percentage;
+      });
+      
+      // Перенумеровываем дни
+      const renumberedDays = newDays.map((day, idx) => ({
         ...day,
-        amount: profitAmount,
-        deposit: currentDeposit
-      };
-    });
-    
-    // Обновляем состояние
-    setDays(recalculatedDays);
-    setDeposit(recalculatedDays[recalculatedDays.length - 1].deposit);
+        day: idx + 1
+      }));
+      
+      // Пересчитываем депозит для всех дней
+      let currentDeposit = initialDeposit;
+      const recalculatedDays = renumberedDays.map(day => {
+        // Рассчитываем прибыль
+        const profitAmount = (currentDeposit * leverage) * (day.percentage / 100);
+        // Обновляем депозит
+        currentDeposit += profitAmount;
+        
+        return {
+          ...day,
+          amount: profitAmount,
+          deposit: currentDeposit
+        };
+      });
+      
+      // Обновляем состояние
+      setDays(recalculatedDays);
+      setDeposit(recalculatedDays[recalculatedDays.length - 1].deposit);
+    }
     
     // Удаляем день из архива
     const updatedArchive = [...archivedDays];

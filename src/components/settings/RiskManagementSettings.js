@@ -73,6 +73,11 @@ const RiskManagementSettings = ({
               onChange={(e) => handleSettingChange('tradingDaysPerMonth', parseInt(e.target.value) || 0)}
               min="1"
               max="31"
+              style={{ 
+                backgroundColor: 'var(--color-input)',
+                color: 'var(--color-text-primary)',
+                border: '1px solid var(--color-border)'
+              }}
             />
           </div>
           <div className="mt-1 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
@@ -93,6 +98,11 @@ const RiskManagementSettings = ({
               onChange={(e) => handleSettingChange('tradesPerDay', parseInt(e.target.value) || 0)}
               min="1"
               max="100"
+              style={{ 
+                backgroundColor: 'var(--color-input)',
+                color: 'var(--color-text-primary)',
+                border: '1px solid var(--color-border)'
+              }}
             />
           </div>
           <div className="mt-1 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
@@ -110,6 +120,11 @@ const RiskManagementSettings = ({
               className="form-select w-full rounded-lg"
               value={settings.updatePeriod}
               onChange={(e) => handleSettingChange('updatePeriod', e.target.value)}
+              style={{ 
+                backgroundColor: 'var(--color-input)',
+                color: 'var(--color-text-primary)',
+                border: '1px solid var(--color-border)'
+              }}
             >
               <option value="monthly">Ежемесячно</option>
               <option value="biweekly">Раз в две недели</option>
@@ -131,6 +146,11 @@ const RiskManagementSettings = ({
               onChange={(e) => handleSettingChange('profitLimit', parseInt(e.target.value) || 0)}
               min="1"
               max="100"
+              style={{ 
+                backgroundColor: 'var(--color-input)',
+                color: 'var(--color-text-primary)',
+                border: '1px solid var(--color-border)'
+              }}
             />
           </div>
           <div className="mt-1 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
@@ -167,6 +187,11 @@ const RiskManagementSettings = ({
                 onChange={(e) => handleSettingChange('growthThreshold', parseInt(e.target.value) || 0)}
                 min="1"
                 max="100"
+                style={{ 
+                  backgroundColor: 'var(--color-input)',
+                  color: 'var(--color-text-primary)',
+                  border: '1px solid var(--color-border)'
+                }}
               />
             </div>
           </div>

@@ -5,7 +5,7 @@ import { specialGradients, cardGradients } from '../../utils/gradients';
 /**
  * GlassmorphismSettings - компонент для настройки стилей гласморфизма
  */
-const GlassmorphismSettings = ({ onSelectStyle, currentStyle }) => {
+const GlassmorphismSettings = ({ onStyleChange, currentStyle }) => {
   const [selectedCategory, setSelectedCategory] = useState('card');
   const [blurLevel, setBlurLevel] = useState(10);
   const [opacity, setOpacity] = useState(0.2);
@@ -18,7 +18,7 @@ const GlassmorphismSettings = ({ onSelectStyle, currentStyle }) => {
   
   // Обработчик выбора градиента
   const handleSelectGradient = (gradientKey, gradientValue) => {
-    onSelectStyle({
+    onStyleChange({
       key: gradientKey,
       value: gradientValue,
       blur: blurLevel,

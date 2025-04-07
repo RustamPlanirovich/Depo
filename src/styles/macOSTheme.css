@@ -15,6 +15,7 @@
   --color-bg-primary: #ffffff;
   --color-bg-secondary: #f5f5f7;
   --color-bg-tertiary: #e8e8ed;
+  --color-bg-tertiary-rgb: 232, 232, 237;
   
   /* Text colors */
   --color-text-primary: #1d1d1f;
@@ -24,6 +25,7 @@
   /* Border colors */
   --color-border: rgba(0, 0, 0, 0.1);
   --color-border-light: rgba(0, 0, 0, 0.05);
+  --color-border-rgb: 0, 0, 0;
   
   /* Interactive elements */
   --color-accent: #0071e3;
@@ -57,6 +59,7 @@
   --color-bg-primary: #1e1e1e;
   --color-bg-secondary: #252528;
   --color-bg-tertiary: #323236;
+  --color-bg-tertiary-rgb: 50, 50, 54;
   
   /* Text colors */
   --color-text-primary: #ffffff;
@@ -66,6 +69,7 @@
   /* Border colors */
   --color-border: rgba(255, 255, 255, 0.15);
   --color-border-light: rgba(255, 255, 255, 0.08);
+  --color-border-rgb: 255, 255, 255;
   
   /* Interactive elements */
   --color-accent: #0a84ff;
@@ -91,6 +95,19 @@
   --color-table-row-odd: #252528;
   --color-table-row-even: #2c2c30;
   --color-table-row-hover: #323236;
+}
+
+/* Glassmorphism style */
+.glassmorphism {
+  background-color: rgba(var(--color-bg-tertiary-rgb), 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(var(--color-border-rgb), 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .glassmorphism {
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 }
 
 /* Base element styles */

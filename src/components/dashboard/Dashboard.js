@@ -4,6 +4,8 @@ import AnimatedValue from '../common/AnimatedValue';
 import AnimatedProgressBar from '../common/AnimatedProgressBar';
 import StatsSummary from './StatsSummary';
 import InputForm from './InputForm';
+import RiskManagement from './RiskManagement';
+import RiskCard from './RiskCard';
 import { FiDollarSign, FiTrendingUp, FiTarget } from 'react-icons/fi';
 
 /**
@@ -154,6 +156,22 @@ const Dashboard = ({
         leverage={leverage}
         initialDeposit={initialDeposit}
         days={days}
+        dailyTarget={dailyTarget}
+      />
+      
+      {/* Risk Management */}
+      <RiskManagement
+        days={days}
+        deposit={deposit}
+        leverage={leverage}
+        initialDeposit={initialDeposit}
+      />
+      
+      {/* Risk Card */}
+      <RiskCard
+        days={days}
+        deposit={deposit}
+        leverage={leverage}
         dailyTarget={dailyTarget}
       />
       

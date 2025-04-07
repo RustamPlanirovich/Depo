@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { exportDataToJson } from '../../utils/dataOperations';
+import GlassmorphismSettings from './GlassmorphismSettings';
+import { cardGradients } from '../../utils/gradients';
 
 /**
  * Settings component - handle application configuration and data management
@@ -26,6 +28,28 @@ const Settings = ({
   const [newInitialDeposit, setNewInitialDeposit] = useState(initialDeposit);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetType, setResetType] = useState('all');
+  
+  // Добавляем состояние для гласморфизма
+  const [glassmorphismStyle, setGlassmorphismStyle] = useState(() => {
+    // Попытка загрузить сохраненный стиль из localStorage
+    const savedStyle = localStorage.getItem('glassmorphismStyle');
+    return savedStyle ? JSON.parse(savedStyle) : {
+      key: 'blue_medium',
+      value: cardGradients.blue.medium,
+      blur: 10,
+      opacity: 0.2
+    };
+  });
+  
+  // Сохраняем выбранный стиль в localStorage при изменении
+  useEffect(() => {
+    localStorage.setItem('glassmorphismStyle', JSON.stringify(glassmorphismStyle));
+    
+    // Добавляем стили CSS для применения гласморфизма глобально
+    document.documentElement.style.setProperty('--glassmorphism-gradient', glassmorphismStyle.value);
+    document.documentElement.style.setProperty('--glassmorphism-blur', `${glassmorphismStyle.blur}px`);
+    document.documentElement.style.setProperty('--glassmorphism-opacity', glassmorphismStyle.opacity);
+  }, [glassmorphismStyle]);
   
   // Handle saving new settings
   const handleSaveSettings = () => {
@@ -121,9 +145,20 @@ const Settings = ({
     setShowResetConfirm(false);
   };
   
+  // Handle glassmorphism style selection
+  const handleGlassmorphismChange = (style) => {
+    setGlassmorphismStyle(style);
+  };
+  
   return (
     <div>
       <h1 className="text-3xl font-bold text-blue-300 mb-6">Настройки</h1>
+      
+      {/* Glassmorphism Settings */}
+      <GlassmorphismSettings 
+        onSelectStyle={handleGlassmorphismChange}
+        currentStyle={glassmorphismStyle}
+      />
       
       {/* General Settings */}
       <div className="bg-gray-800 p-5 rounded-lg mb-6">

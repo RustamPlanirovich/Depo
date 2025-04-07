@@ -163,4 +163,90 @@ export const formatNumber = (num) => {
  */
 export const formatPercentage = (percentage) => {
   return percentage.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+};
+
+/**
+ * Calculate maximum drawdown
+ * @param {Array} days - Array of trading days
+ * @param {number} initialDeposit - Initial deposit amount
+ * @returns {number} - Maximum drawdown percentage
+ */
+export const calculateMaxDrawdown = (days, initialDeposit) => {
+  if (!days || days.length === 0) return 0;
+  
+  let maxDrawdown = 0;
+  let peak = initialDeposit;
+  
+  // Start with initialDeposit and iterate through all days
+  let currentDeposit = initialDeposit;
+  
+  for (const day of days) {
+    currentDeposit += day.amount;
+    
+    if (currentDeposit > peak) {
+      peak = currentDeposit;
+    }
+    
+    const drawdown = ((peak - currentDeposit) / peak) * 100;
+    
+    if (drawdown > maxDrawdown) {
+      maxDrawdown = drawdown;
+    }
+  }
+  
+  return maxDrawdown;
+};
+
+/**
+ * Calculate risk per trade
+ * @param {number} deposit - Current deposit
+ * @param {number} riskPercentage - Risk percentage (default: 2%)
+ * @returns {number} - Amount at risk
+ */
+export const calculateRiskPerTrade = (deposit, riskPercentage = 2) => {
+  return deposit * (riskPercentage / 100);
+};
+
+/**
+ * Calculate risk to reward ratio
+ * @param {Array} days - Array of trading days
+ * @returns {number} - Risk to reward ratio
+ */
+export const calculateRiskRewardRatio = (days) => {
+  if (!days || days.length === 0) return 0;
+  
+  const profitableDays = days.filter(day => day.percentage > 0);
+  const unprofitableDays = days.filter(day => day.percentage < 0);
+  
+  if (unprofitableDays.length === 0) return profitableDays.length > 0 ? 99 : 0;
+  
+  const avgProfit = profitableDays.reduce((sum, day) => sum + day.percentage, 0) / 
+                   (profitableDays.length || 1);
+  const avgLoss = Math.abs(unprofitableDays.reduce((sum, day) => sum + day.percentage, 0) / 
+                  (unprofitableDays.length || 1));
+  
+  return avgLoss === 0 ? 99 : avgProfit / avgLoss;
+};
+
+/**
+ * Count maximum consecutive losing days
+ * @param {Array} days - Array of trading days
+ * @returns {number} - Count of maximum consecutive losing days
+ */
+export const countConsecutiveLosingDays = (days) => {
+  if (!days || days.length === 0) return 0;
+  
+  let maxConsecutive = 0;
+  let currentConsecutive = 0;
+  
+  for (const day of days) {
+    if (day.percentage < 0) {
+      currentConsecutive++;
+      maxConsecutive = Math.max(maxConsecutive, currentConsecutive);
+    } else {
+      currentConsecutive = 0;
+    }
+  }
+  
+  return maxConsecutive;
 }; 

@@ -3,6 +3,7 @@ import { Card, Table, Typography, Space, Tag, Tooltip, Alert, Row, Col, Statisti
 import { InfoCircleOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 import { binanceService, FundingRateData, HistoricalFundingRate } from '../../services/binanceService';
 import { Line } from '@ant-design/charts';
+import './FundingRate.css';
 
 const { Title, Text } = Typography;
 
@@ -30,7 +31,7 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
       const historical = await binanceService.getHistoricalFundingRates(symbol);
       setHistoricalRates(historical);
     } catch (err) {
-      setError('Failed to fetch historical data');
+      setError('Ошибка при загрузке исторических данных');
       console.error('Error fetching historical data:', err);
     }
   };
@@ -43,7 +44,7 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
         setFundingRates(rates);
         setError(null);
       } catch (err) {
-        setError('Failed to fetch funding rates');
+        setError('Ошибка при загрузке данных о фандинге');
         console.error('Error fetching funding rates:', err);
       } finally {
         setLoading(false);
@@ -51,20 +52,20 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
     };
 
     fetchFundingRates();
-    const interval = setInterval(fetchFundingRates, 60000); // Update every minute
+    const interval = setInterval(fetchFundingRates, 60000); // Обновление каждую минуту
 
     return () => clearInterval(interval);
   }, []);
 
   const columns = [
     {
-      title: 'Symbol',
+      title: 'Пара',
       dataIndex: 'symbol',
       key: 'symbol',
       sorter: (a: FundingRateData, b: FundingRateData) => a.symbol.localeCompare(b.symbol),
     },
     {
-      title: 'Current Funding Rate',
+      title: 'Текущий фандинг',
       dataIndex: 'fundingRate',
       key: 'fundingRate',
       render: (rate: number) => (
@@ -75,7 +76,7 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
       sorter: (a: FundingRateData, b: FundingRateData) => a.fundingRate - b.fundingRate,
     },
     {
-      title: 'Predicted Rate',
+      title: 'Прогноз фандинга',
       dataIndex: 'predictedRate',
       key: 'predictedRate',
       render: (rate: number) => (
@@ -85,30 +86,30 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
       ),
     },
     {
-      title: 'Current Price',
+      title: 'Текущая цена',
       dataIndex: 'price',
       key: 'price',
       render: (price: number) => `$${price.toLocaleString()}`,
     },
     {
-      title: '24h Volume',
+      title: 'Объем за 24ч',
       dataIndex: 'volume24h',
       key: 'volume24h',
       render: (volume: number) => `$${volume.toLocaleString()}`,
       sorter: (a: FundingRateData, b: FundingRateData) => a.volume24h - b.volume24h,
     },
     {
-      title: 'Next Funding',
+      title: 'Следующий фандинг',
       dataIndex: 'nextFundingTime',
       key: 'nextFundingTime',
       render: (time: number) => new Date(time).toLocaleTimeString(),
     },
     {
-      title: 'Action',
+      title: 'Действие',
       key: 'action',
       render: (_: any, record: FundingRateData) => (
         <Space size="middle">
-          <a onClick={() => handleSymbolSelect(record.symbol)}>View Details</a>
+          <a onClick={() => handleSymbolSelect(record.symbol)}>Подробнее</a>
         </Space>
       ),
     },
@@ -117,24 +118,24 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
   const highestRate = getHighestFundingRate(fundingRates);
 
   return (
-    <div className={className}>
-      <Title level={2}>Funding Rate Analysis</Title>
+    <div className={`funding-rate-container ${className}`}>
+      <Title level={2} className="funding-rate-title">Анализ Фандинга</Title>
       
       <Alert
-        message="About Funding Rates"
-        description="Funding rates are payments between long and short traders in perpetual futures markets. Positive rates mean longs pay shorts, negative rates mean shorts pay longs. Rates are typically settled every 8 hours."
+        message="О фандинге"
+        description="Фандинг - это платежи между трейдерами в бессрочных фьючерсных рынках. Положительные ставки означают, что лонги платят шортам, отрицательные - шорты платят лонгам. Фандинг обычно происходит каждые 8 часов."
         type="info"
         showIcon
-        style={{ marginBottom: 24 }}
+        className="funding-rate-alert"
       />
 
       {error && (
         <Alert
-          message="Error"
+          message="Ошибка"
           description={error}
           type="error"
           showIcon
-          style={{ marginBottom: 24 }}
+          className="funding-rate-alert"
         />
       )}
 
@@ -144,10 +145,14 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
         loading={loading}
         rowKey="symbol"
         pagination={{ pageSize: 10 }}
+        className="funding-rate-table"
       />
 
       {selectedSymbol && historicalRates.length > 0 && (
-        <Card title={`Historical Funding Rates - ${selectedSymbol}`} style={{ marginTop: 24 }}>
+        <Card 
+          title={`История фандинга - ${selectedSymbol}`} 
+          className="funding-rate-chart-card"
+        >
           <Line
             data={historicalRates.map(rate => ({
               date: new Date(rate.fundingTime).toLocaleDateString(),
@@ -164,31 +169,32 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
                 fill: '#aaa',
               },
             }}
+            theme="dark"
           />
         </Card>
       )}
 
       {highestRate && (
-        <Row gutter={16} style={{ marginTop: 24 }}>
+        <Row gutter={16} className="funding-rate-stats">
           <Col span={12}>
-            <Card>
+            <Card className="funding-rate-stat-card">
               <Statistic
-                title="Highest Funding Rate"
+                title="Наивысший фандинг"
                 value={highestRate.fundingRate * 100}
                 precision={4}
                 suffix="%"
                 valueStyle={{ color: highestRate.fundingRate >= 0 ? '#3f8600' : '#cf1322' }}
                 prefix={highestRate.fundingRate >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
               />
-              <Text type="secondary">Symbol: {highestRate.symbol}</Text>
+              <Text type="secondary">Пара: {highestRate.symbol}</Text>
             </Card>
           </Col>
           <Col span={12}>
-            <Card title="Trading Strategy">
+            <Card title="Торговая стратегия" className="funding-rate-strategy-card">
               <Text>
                 {highestRate.fundingRate > 0
-                  ? 'Consider short positions as longs are paying shorts. The higher the funding rate, the more profitable it is to be short.'
-                  : 'Consider long positions as shorts are paying longs. The lower (more negative) the funding rate, the more profitable it is to be long.'}
+                  ? 'Рассмотрите короткие позиции, так как лонги платят шортам. Чем выше фандинг, тем выгоднее быть в шорте.'
+                  : 'Рассмотрите длинные позиции, так как шорты платят лонгам. Чем ниже (более отрицательный) фандинг, тем выгоднее быть в лонге.'}
               </Text>
             </Card>
           </Col>

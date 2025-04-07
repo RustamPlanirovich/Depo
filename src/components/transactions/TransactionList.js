@@ -36,6 +36,12 @@ const TransactionList = ({ days, startEditingDay, archiveDay, archiveTransaction
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
   
+  // Safe number formatting
+  const formatNumber = (value) => {
+    if (value === undefined || value === null) return '0.00';
+    return Number(value).toFixed(2);
+  };
+  
   // Edit individual transaction
   const handleEditTransaction = (e, dayIndex, transactionIndex) => {
     e.stopPropagation();
@@ -173,16 +179,16 @@ const TransactionList = ({ days, startEditingDay, archiveDay, archiveTransaction
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className={`text-sm font-medium ${day.percentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {day.percentage !== undefined ? day.percentage.toFixed(2) : '0.00'}%
+                        {formatNumber(day.percentage)}%
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className={`text-sm font-medium ${day.amount >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        ${day.amount !== undefined ? day.amount.toFixed(2) : '0.00'}
+                        ${formatNumber(day.amount)}
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm text-white">${day.deposit !== undefined ? day.deposit.toFixed(2) : '0.00'}</div>
+                      <div className="text-sm text-white">${formatNumber(day.deposit)}</div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex space-x-2">
@@ -243,10 +249,21 @@ const TransactionList = ({ days, startEditingDay, archiveDay, archiveTransaction
                                     {formatTime(transaction.timestamp)}
                                   </div>
                                   <div className={`${transaction.percentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                    {transaction.percentage !== undefined ? transaction.percentage.toFixed(2) : '0.00'}%
+                                    {formatNumber(transaction.percentage)}%
                                   </div>
                                   <div className={`${transaction.amount >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                    ${transaction.amount !== undefined ? transaction.amount.toFixed(2) : '0.00'}
+                                    ${formatNumber(transaction.amount)}
+                                  </div>
+                                  <div className="text-gray-400">
+                                    {transaction.type === 'withdraw' ? (
+                                      <span className="text-red-400 font-bold">-</span>
+                                    ) : transaction.type === 'deposit' ? (
+                                      <span className="text-green-400 font-bold">+</span>
+                                    ) : transaction.percentage > 0 ? (
+                                      <span className="text-green-400 font-bold">$</span>
+                                    ) : (
+                                      <span className="text-red-400 font-bold">$</span>
+                                    )}
                                   </div>
                                 </div>
                                 <div className="flex space-x-1">
@@ -274,11 +291,6 @@ const TransactionList = ({ days, startEditingDay, archiveDay, archiveTransaction
                                   </button>
                                 </div>
                               </div>
-                              {transaction.description && (
-                                <div className="mt-2 text-gray-400 text-sm border-t border-gray-700 pt-2">
-                                  {transaction.description}
-                                </div>
-                              )}
                             </div>
                           ))}
                         </div>

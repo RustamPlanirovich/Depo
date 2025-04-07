@@ -3,6 +3,15 @@ import axios from 'axios';
 export interface BybitFundingRateData {
   symbol: string;
   fundingRate: number;
+  predictedFundingRate: number;
+  markPrice: number;
+  nextFundingTime: number;
+  volume24h: number;
+}
+
+export interface BybitHistoricalFundingRate {
+  symbol: string;
+  fundingRate: number;
   fundingRateTimestamp: number;
   predictedFundingRate: number;
   markPrice: number;
@@ -20,26 +29,25 @@ class BybitService {
           category: 'linear'
         }
       });
-
-      if (response.data.retCode === 0) {
+      
+      if (response.data.retCode === 0 && Array.isArray(response.data.result.list)) {
         return response.data.result.list.map((item: any) => ({
           symbol: item.symbol,
-          fundingRate: parseFloat(item.fundingRate) * 100, // Convert to percentage
-          fundingRateTimestamp: item.fundingRateTimestamp,
-          predictedFundingRate: parseFloat(item.predictedFundingRate) * 100,
-          markPrice: parseFloat(item.markPrice),
-          nextFundingTime: item.nextFundingTime,
-          volume24h: parseFloat(item.volume24h)
+          fundingRate: parseFloat(item.fundingRate || '0') * 100,
+          predictedFundingRate: parseFloat(item.nextFundingRate || '0') * 100,
+          markPrice: parseFloat(item.markPrice || '0'),
+          nextFundingTime: parseInt(item.nextFundingTime || '0'),
+          volume24h: parseFloat(item.volume24h || '0')
         }));
       }
-      throw new Error(response.data.retMsg);
+      return [];
     } catch (error) {
-      console.error('Error fetching Bybit funding rates:', error);
-      throw error;
+      console.error('Error fetching ByBit funding rates:', error);
+      return [];
     }
   }
 
-  async getHistoricalFundingRates(symbol: string, limit: number = 100): Promise<BybitFundingRateData[]> {
+  async getHistoricalFundingRates(symbol: string, limit: number = 100): Promise<BybitHistoricalFundingRate[]> {
     try {
       const response = await axios.get(`${this.baseUrl}/v5/market/funding/history`, {
         params: {
@@ -49,21 +57,21 @@ class BybitService {
         }
       });
 
-      if (response.data.retCode === 0) {
+      if (response.data.retCode === 0 && Array.isArray(response.data.result.list)) {
         return response.data.result.list.map((item: any) => ({
           symbol: item.symbol,
-          fundingRate: parseFloat(item.fundingRate) * 100,
-          fundingRateTimestamp: item.fundingRateTimestamp,
-          predictedFundingRate: parseFloat(item.predictedFundingRate) * 100,
-          markPrice: parseFloat(item.markPrice),
-          nextFundingTime: item.nextFundingTime,
-          volume24h: parseFloat(item.volume24h)
+          fundingRate: parseFloat(item.fundingRate || '0') * 100,
+          fundingRateTimestamp: parseInt(item.fundingRateTimestamp || '0'),
+          predictedFundingRate: parseFloat(item.nextFundingRate || '0') * 100,
+          markPrice: parseFloat(item.markPrice || '0'),
+          nextFundingTime: parseInt(item.nextFundingTime || '0'),
+          volume24h: parseFloat(item.volume24h || '0')
         }));
       }
-      throw new Error(response.data.retMsg);
+      return [];
     } catch (error) {
-      console.error('Error fetching Bybit historical funding rates:', error);
-      throw error;
+      console.error('Error fetching ByBit historical funding rates:', error);
+      return [];
     }
   }
 }

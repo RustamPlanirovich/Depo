@@ -1,13 +1,13 @@
-.funding-rate-container {
+.funding-rate {
   padding: 24px;
-  background-color: #1a1a1a;
+  background-color: #141414;
   min-height: 100vh;
   color: #fff;
 }
 
-.funding-rate-title {
-  color: #fff !important;
-  margin-bottom: 24px !important;
+.funding-rate h1 {
+  color: #fff;
+  margin-bottom: 24px;
 }
 
 .funding-rate-alert {
@@ -26,16 +26,21 @@
 
 .funding-rate-filters {
   margin-bottom: 24px;
-  background-color: #2a2a2a;
-  border: 1px solid #3a3a3a;
+  background-color: #1f1f1f;
+  border: 1px solid #303030;
 }
 
 .funding-rate-filters .ant-card-body {
-  padding: 16px;
+  padding: 24px;
+}
+
+.funding-rate-filters h4 {
+  color: #fff;
+  margin-bottom: 16px;
 }
 
 .funding-rate-filters .ant-slider {
-  margin: 10px 0;
+  margin: 16px 0;
 }
 
 .funding-rate-filters .ant-slider-track {
@@ -46,8 +51,8 @@
   border-color: #1890ff;
 }
 
-.funding-rate-filters .ant-slider-handle:focus {
-  box-shadow: 0 0 0 5px rgba(24, 144, 255, 0.2);
+.funding-rate-filters .ant-slider-mark-text {
+  color: #8c8c8c;
 }
 
 .funding-rate-filters .ant-select {
@@ -55,64 +60,58 @@
 }
 
 .funding-rate-filters .ant-select-selector {
-  background-color: #1a1a1a !important;
-  border-color: #3a3a3a !important;
+  background-color: #141414 !important;
+  border-color: #303030 !important;
+  color: #fff !important;
 }
 
 .funding-rate-filters .ant-select-selection-item {
-  color: #fff;
+  color: #fff !important;
 }
 
-.funding-rate-filters .ant-input {
-  background-color: #1a1a1a;
-  border-color: #3a3a3a;
-  color: #fff;
+.funding-rate-filters .ant-select-arrow {
+  color: #8c8c8c !important;
 }
 
-.funding-rate-filters .ant-input-prefix {
-  color: #999;
-}
-
-.funding-rate-filters .ant-input:hover,
-.funding-rate-filters .ant-input:focus {
-  border-color: #1890ff;
+.funding-rate-filters .threshold-value {
+  color: #8c8c8c;
+  margin-top: 8px;
 }
 
 .funding-rate-table {
-  background-color: #2a2a2a;
-  border-radius: 8px;
-  overflow: hidden;
+  margin-bottom: 24px;
+  background-color: #1f1f1f;
+  border: 1px solid #303030;
 }
 
 .funding-rate-table .ant-table {
-  background-color: #2a2a2a;
+  background-color: #1f1f1f;
   color: #fff;
 }
 
 .funding-rate-table .ant-table-thead > tr > th {
-  background-color: #1a1a1a;
+  background-color: #141414;
   color: #fff;
-  border-bottom: 1px solid #3a3a3a;
+  border-bottom: 1px solid #303030;
 }
 
 .funding-rate-table .ant-table-tbody > tr > td {
-  background-color: #2a2a2a;
+  background-color: #1f1f1f;
   color: #fff;
-  border-bottom: 1px solid #3a3a3a;
+  border-bottom: 1px solid #303030;
 }
 
 .funding-rate-table .ant-table-tbody > tr:hover > td {
-  background-color: #3a3a3a;
+  background-color: #303030;
 }
 
 .funding-rate-table .ant-table-pagination {
-  background-color: #2a2a2a;
-  color: #fff;
+  margin: 16px 0;
 }
 
 .funding-rate-table .ant-pagination-item {
-  background-color: #1a1a1a;
-  border-color: #3a3a3a;
+  background-color: #1f1f1f;
+  border-color: #303030;
 }
 
 .funding-rate-table .ant-pagination-item a {
@@ -120,25 +119,252 @@
 }
 
 .funding-rate-table .ant-pagination-item-active {
+  border-color: #1890ff;
+}
+
+.funding-rate-table .ant-pagination-prev button,
+.funding-rate-table .ant-pagination-next button {
+  background-color: #1f1f1f;
+  border-color: #303030;
+  color: #fff;
+}
+
+.funding-rate-chart {
+  margin-bottom: 24px;
+  background-color: #1f1f1f;
+  border: 1px solid #303030;
+}
+
+.funding-rate-chart .ant-card-head {
+  background-color: #141414;
+  border-bottom: 1px solid #303030;
+}
+
+.funding-rate-chart .ant-card-head-title {
+  color: #fff;
+}
+
+.funding-rate-strategies {
+  margin-bottom: 24px;
+}
+
+.funding-rate-strategies .ant-card {
+  background-color: #1f1f1f;
+  border: 1px solid #303030;
+}
+
+.funding-rate-strategies .ant-card-head {
+  background-color: #141414;
+  border-bottom: 1px solid #303030;
+}
+
+.funding-rate-strategies .ant-card-head-title {
+  color: #fff;
+}
+
+.funding-rate-strategies .ant-card-body {
+  color: #fff;
+}
+
+.funding-rate-strategies ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.funding-rate-strategies li {
+  margin-bottom: 8px;
+  padding: 8px;
+  background-color: #141414;
+  border-radius: 4px;
+  border: 1px solid #303030;
+}
+
+.funding-rate-strategies li strong {
+  color: #1890ff;
+}
+
+/* Dark theme for tabs */
+.ant-tabs {
+  background-color: #1f1f1f;
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 24px;
+}
+
+.ant-tabs-tab {
+  color: #8c8c8c !important;
+}
+
+.ant-tabs-tab-active {
+  color: #1890ff !important;
+}
+
+.ant-tabs-ink-bar {
+  background-color: #1890ff !important;
+}
+
+/* Dark theme for search input */
+.ant-input-search .ant-input {
+  background-color: #141414;
+  border-color: #303030;
+  color: #fff;
+}
+
+.ant-input-search .ant-input::placeholder {
+  color: #8c8c8c;
+}
+
+.ant-input-search .ant-input-search-button {
   background-color: #1890ff;
   border-color: #1890ff;
 }
 
-.funding-rate-chart-card {
-  margin-top: 24px;
+/* Dark theme for buttons */
+.ant-btn {
+  background-color: #141414;
+  border-color: #303030;
+  color: #fff;
+}
+
+.ant-btn-primary {
+  background-color: #1890ff;
+  border-color: #1890ff;
+}
+
+/* Dark theme for alerts */
+.ant-alert {
+  background-color: #1f1f1f;
+  border: 1px solid #303030;
+}
+
+.ant-alert-message {
+  color: #fff;
+}
+
+.ant-alert-description {
+  color: #8c8c8c;
+}
+
+/* Dark theme for tooltips */
+.ant-tooltip-inner {
+  background-color: #141414;
+  color: #fff;
+}
+
+/* Dark theme for dropdowns */
+.ant-select-dropdown {
+  background-color: #1f1f1f;
+  border: 1px solid #303030;
+}
+
+.ant-select-item {
+  color: #fff;
+}
+
+.ant-select-item-option-selected {
+  background-color: #303030;
+}
+
+.ant-select-item-option-active {
+  background-color: #303030;
+}
+
+/* Loading state */
+.ant-spin-dot-item {
+  background-color: #1890ff;
+}
+
+/* Chart customization */
+.g2-tooltip {
+  background-color: #1f1f1f !important;
+  border: 1px solid #303030 !important;
+  color: #fff !important;
+}
+
+.g2-tooltip-title {
+  color: #fff !important;
+}
+
+.g2-tooltip-list-item {
+  color: #8c8c8c !important;
+}
+
+.g2-tooltip-list-item-name {
+  color: #fff !important;
+}
+
+.g2-tooltip-list-item-value {
+  color: #1890ff !important;
+}
+
+/* Стили для тегов */
+.ant-tag {
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.ant-tag-green {
+  background-color: rgba(82, 196, 26, 0.2);
+  color: #52c41a;
+}
+
+.ant-tag-red {
+  background-color: rgba(245, 34, 45, 0.2);
+  color: #f5222d;
+}
+
+/* Стили для ссылок */
+.funding-rate-table a {
+  color: #1890ff;
+}
+
+.funding-rate-table a:hover {
+  color: #40a9ff;
+}
+
+/* Стили для фильтров таблицы */
+.funding-rate-table .ant-table-filter-dropdown {
   background-color: #2a2a2a;
   border: 1px solid #3a3a3a;
 }
 
-.funding-rate-chart-card .ant-card-head {
+.funding-rate-table .ant-table-filter-dropdown input {
   background-color: #1a1a1a;
-  border-bottom: 1px solid #3a3a3a;
-}
-
-.funding-rate-chart-card .ant-card-head-title {
+  border-color: #3a3a3a;
   color: #fff;
 }
 
+.funding-rate-table .ant-table-filter-dropdown .ant-btn {
+  background-color: #1a1a1a;
+  border-color: #3a3a3a;
+  color: #fff;
+}
+
+.funding-rate-table .ant-table-filter-dropdown .ant-btn-primary {
+  background-color: #1890ff;
+  border-color: #1890ff;
+}
+
+/* Стили для селекта */
+.ant-select-dropdown {
+  background-color: #2a2a2a;
+  border: 1px solid #3a3a3a;
+}
+
+.ant-select-item {
+  color: #fff;
+}
+
+.ant-select-item-option-selected {
+  background-color: #1890ff;
+}
+
+.ant-select-item-option-active {
+  background-color: #3a3a3a;
+}
+
+/* Стили для статистики */
 .funding-rate-stats {
   margin-top: 24px;
 }
@@ -182,37 +408,6 @@
   margin-bottom: 8px;
 }
 
-/* Стили для тегов */
-.ant-tag {
-  border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-}
-
-.ant-tag-green {
-  background-color: rgba(82, 196, 26, 0.2);
-  color: #52c41a;
-}
-
-.ant-tag-red {
-  background-color: rgba(245, 34, 45, 0.2);
-  color: #f5222d;
-}
-
-/* Стили для ссылок */
-.funding-rate-table a {
-  color: #1890ff;
-}
-
-.funding-rate-table a:hover {
-  color: #40a9ff;
-}
-
-/* Стили для загрузки */
-.ant-spin-dot-item {
-  background-color: #1890ff;
-}
-
 /* Стили для пульсации при обновлении данных */
 @keyframes pulse {
   0% {
@@ -228,45 +423,4 @@
 
 .funding-rate-table .ant-table-tbody > tr.ant-table-row:hover > td {
   animation: pulse 1s infinite;
-}
-
-/* Стили для фильтров таблицы */
-.funding-rate-table .ant-table-filter-dropdown {
-  background-color: #2a2a2a;
-  border: 1px solid #3a3a3a;
-}
-
-.funding-rate-table .ant-table-filter-dropdown input {
-  background-color: #1a1a1a;
-  border-color: #3a3a3a;
-  color: #fff;
-}
-
-.funding-rate-table .ant-table-filter-dropdown .ant-btn {
-  background-color: #1a1a1a;
-  border-color: #3a3a3a;
-  color: #fff;
-}
-
-.funding-rate-table .ant-table-filter-dropdown .ant-btn-primary {
-  background-color: #1890ff;
-  border-color: #1890ff;
-}
-
-/* Стили для селекта */
-.ant-select-dropdown {
-  background-color: #2a2a2a;
-  border: 1px solid #3a3a3a;
-}
-
-.ant-select-item {
-  color: #fff;
-}
-
-.ant-select-item-option-selected {
-  background-color: #1890ff;
-}
-
-.ant-select-item-option-active {
-  background-color: #3a3a3a;
 } 

@@ -5,18 +5,20 @@ const BINANCE_API_BASE = 'https://fapi.binance.com/fapi/v1';
 export interface FundingRateData {
   symbol: string;
   fundingRate: number;
-  fundingTime: number;
-  nextFundingTime: number;
-  markPrice: number;
   predictedRate: number;
+  markPrice: number;
+  nextFundingTime: number;
   volume24h: number;
-  openInterest: number;
 }
 
 export interface HistoricalFundingRate {
   symbol: string;
   fundingRate: number;
   fundingTime: number;
+  predictedRate: number;
+  markPrice: number;
+  nextFundingTime: number;
+  volume24h: number;
 }
 
 interface TickerData {
@@ -34,17 +36,15 @@ class BinanceService {
       const response = await axios.get(`${this.baseUrl}/fapi/v1/premiumIndex`);
       return response.data.map((item: any) => ({
         symbol: item.symbol,
-        fundingRate: parseFloat(item.lastFundingRate) * 100, // Convert to percentage
-        fundingTime: item.time,
-        nextFundingTime: item.nextFundingTime,
+        fundingRate: parseFloat(item.lastFundingRate) * 100,
+        predictedRate: parseFloat(item.nextFundingRate) * 100,
         markPrice: parseFloat(item.markPrice),
-        predictedRate: parseFloat(item.predictedFundingRate) * 100,
-        volume24h: parseFloat(item.volume),
-        openInterest: parseFloat(item.openInterest)
+        nextFundingTime: item.nextFundingTime,
+        volume24h: parseFloat(item.volume || '0')
       }));
     } catch (error) {
-      console.error('Error fetching funding rates:', error);
-      throw error;
+      console.error('Error fetching Binance funding rates:', error);
+      return [];
     }
   }
 
@@ -59,11 +59,15 @@ class BinanceService {
       return response.data.map((item: any) => ({
         symbol: item.symbol,
         fundingRate: parseFloat(item.fundingRate) * 100,
-        fundingTime: item.fundingTime
+        fundingTime: item.fundingTime,
+        predictedRate: parseFloat(item.nextFundingRate) * 100,
+        markPrice: parseFloat(item.markPrice),
+        nextFundingTime: item.nextFundingTime,
+        volume24h: parseFloat(item.volume || '0')
       }));
     } catch (error) {
-      console.error('Error fetching historical funding rates:', error);
-      throw error;
+      console.error('Error fetching Binance historical funding rates:', error);
+      return [];
     }
   }
 

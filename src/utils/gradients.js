@@ -39,6 +39,20 @@ export const cardGradients = {
     strong: "linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(91, 33, 182, 0.3) 100%)"
   },
   
+  // Оранжевые градиенты
+  orange: {
+    light: "linear-gradient(135deg, rgba(249, 115, 22, 0.05) 0%, rgba(194, 65, 12, 0.1) 100%)",
+    medium: "linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(194, 65, 12, 0.2) 100%)",
+    strong: "linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(194, 65, 12, 0.3) 100%)"
+  },
+  
+  // Teal градиенты
+  teal: {
+    light: "linear-gradient(135deg, rgba(20, 184, 166, 0.05) 0%, rgba(13, 148, 136, 0.1) 100%)",
+    medium: "linear-gradient(135deg, rgba(20, 184, 166, 0.1) 0%, rgba(13, 148, 136, 0.2) 100%)",
+    strong: "linear-gradient(135deg, rgba(20, 184, 166, 0.2) 0%, rgba(13, 148, 136, 0.3) 100%)"
+  },
+  
   // Серые градиенты
   gray: {
     light: "linear-gradient(135deg, rgba(156, 163, 175, 0.05) 0%, rgba(107, 114, 128, 0.1) 100%)",

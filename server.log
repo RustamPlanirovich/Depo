@@ -1,2 +1,3 @@
 Server running on port 3001
 Data will be stored in: /Users/rustam/Desktop/depo/deposit-tracker-data.json
+Error: ENOENT: no such file or directory, stat '/Users/rustam/Desktop/depo/build/index.html'

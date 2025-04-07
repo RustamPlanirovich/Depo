@@ -33,6 +33,11 @@ const AnimatedValue = ({ value, type = 'number', className = '', showSign = true
   
   // Format the value based on type
   const formatValue = (val) => {
+    // Проверка на undefined и null
+    if (val === undefined || val === null) {
+      return '0';
+    }
+    
     switch (type) {
       case 'money':
         return formatMoney(val);

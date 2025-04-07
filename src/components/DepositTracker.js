@@ -27,6 +27,21 @@ const DepositTracker = () => {
   const [goals, setGoals] = useState([]);
   const [dataLoaded, setDataLoaded] = useState(false);
   
+  // Состояние для настроек риск-менеджмента
+  const [riskSettings, setRiskSettings] = useState(() => {
+    const savedSettings = localStorage.getItem('riskSettings');
+    return savedSettings ? JSON.parse(savedSettings) : {
+      tradingDaysPerMonth: 20,
+      tradesPerDay: 10,
+      updatePeriod: 'monthly',
+      updateByGrowth: false,
+      growthThreshold: 10,
+      profitLimit: 60,
+      lastUpdateDate: new Date().toISOString(),
+      lastUpdateDeposit: deposit
+    };
+  });
+  
   // Local state management
   const [activeSection, setActiveSection] = useState('dashboard');
   const [newPercentage, setNewPercentage] = useState('');
@@ -69,6 +84,11 @@ const DepositTracker = () => {
         setInitialDeposit(data.initialDeposit || 30);
         setArchivedDays(data.archivedDays || []);
         setGoals(data.goals || []);
+        
+        // Загружаем настройки риск-менеджмента, если они есть
+        if (data.riskSettings) {
+          setRiskSettings(data.riskSettings);
+        }
       }
       setDataLoaded(true);
     };
@@ -87,11 +107,18 @@ const DepositTracker = () => {
       days,
       initialDeposit,
       archivedDays,
-      goals
+      goals,
+      riskSettings
     };
     
     saveDataThrottled(data);
-  }, [deposit, leverage, dailyTarget, days, initialDeposit, archivedDays, goals, dataLoaded]);
+  }, [deposit, leverage, dailyTarget, days, initialDeposit, archivedDays, goals, riskSettings, dataLoaded]);
+  
+  // Обработчик сохранения настроек риск-менеджмента
+  const handleSaveRiskSettings = (settings) => {
+    setRiskSettings(settings);
+    localStorage.setItem('riskSettings', JSON.stringify(settings));
+  };
   
   // Check and update goals status on app load and when days change
   useEffect(() => {
@@ -1043,6 +1070,8 @@ const DepositTracker = () => {
               editingTransactionIndex={editingTransactionIndex}
               saveEditedDay={saveEditedDay}
               cancelEditing={cancelEditing}
+              riskSettings={riskSettings}
+              onSaveRiskSettings={handleSaveRiskSettings}
             />
           )}
 
@@ -1144,6 +1173,8 @@ const DepositTracker = () => {
               goals={goals}
               setGoals={setGoals}
               setActiveSection={setActiveSection}
+              riskSettings={riskSettings}
+              onSaveRiskSettings={handleSaveRiskSettings}
             />
           )}
         </main>

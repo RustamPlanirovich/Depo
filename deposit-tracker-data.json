@@ -1,34 +1,64 @@
 {
-  "deposit": 29,
-  "leverage": 10,
+  "deposit": 31.058120300000002,
+  "leverage": 1,
   "dailyTarget": 3,
   "days": [
     {
       "day": 1,
       "date": "2025-04-07",
-      "percentage": -0.3333333333333333,
-      "amount": -1,
-      "deposit": 29,
+      "percentage": 3.5270676666666665,
+      "amount": 1.0581203000000001,
+      "deposit": 31.058120300000002,
       "transactions": [
         {
-          "percentage": 1.6666666666666667,
-          "amount": 5,
-          "timestamp": "2025-04-07T12:05:41.488Z"
+          "percentage": 1,
+          "amount": 0.3,
+          "timestamp": "2025-04-07T13:58:49.232Z"
         },
         {
-          "percentage": -0.8571428571428571,
-          "amount": -3,
-          "timestamp": "2025-04-07T12:05:46.434Z"
+          "percentage": 1,
+          "amount": 0.303,
+          "timestamp": "2025-04-07T13:59:23.526Z"
         },
         {
-          "percentage": -0.9375,
-          "amount": -3,
-          "timestamp": "2025-04-07T12:06:06.713Z"
+          "percentage": 1,
+          "amount": 0.30603,
+          "timestamp": "2025-04-07T13:59:35.943Z"
+        },
+        {
+          "percentage": 1,
+          "amount": 0.30909030000000004,
+          "timestamp": "2025-04-07T14:00:02.269Z"
+        },
+        {
+          "percentage": -0.5125228503908353,
+          "amount": -0.16,
+          "timestamp": "2025-04-07T14:00:32.629Z"
         }
       ]
     }
   ],
   "initialDeposit": 30,
   "archivedDays": [],
-  "goals": []
+  "goals": [
+    {
+      "name": "1",
+      "type": "deposit",
+      "value": "1",
+      "completed": true,
+      "autoCheck": true,
+      "timeLimit": false,
+      "completedDate": "2025-04-07T14:53:26.041Z"
+    }
+  ],
+  "riskSettings": {
+    "tradingDaysPerMonth": 20,
+    "tradesPerDay": 10,
+    "updatePeriod": "monthly",
+    "updateByGrowth": false,
+    "growthThreshold": 10,
+    "profitLimit": 60,
+    "lastUpdateDate": "2025-04-07T13:42:40.556Z",
+    "lastUpdateDeposit": 30
+  }
 }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { exportDataToJson } from '../../utils/dataOperations';
 import GlassmorphismSettings from './GlassmorphismSettings';
+import RiskManagementSettings from './RiskManagementSettings';
 import { cardGradients } from '../../utils/gradients';
 
 /**
@@ -28,6 +29,21 @@ const Settings = ({
   const [newInitialDeposit, setNewInitialDeposit] = useState(initialDeposit);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetType, setResetType] = useState('all');
+  
+  // Состояние для настроек риск-менеджмента
+  const [riskSettings, setRiskSettings] = useState(() => {
+    const savedSettings = localStorage.getItem('riskSettings');
+    return savedSettings ? JSON.parse(savedSettings) : {
+      tradingDaysPerMonth: 20,
+      tradesPerDay: 10,
+      updatePeriod: 'monthly',
+      updateByGrowth: false,
+      growthThreshold: 10,
+      profitLimit: 60,
+      lastUpdateDate: new Date().toISOString(),
+      lastUpdateDeposit: deposit
+    };
+  });
   
   // Добавляем состояние для гласморфизма
   const [glassmorphismStyle, setGlassmorphismStyle] = useState(() => {
@@ -90,6 +106,13 @@ const Settings = ({
     }
   };
   
+  // Обработчик сохранения настроек риск-менеджмента
+  const handleSaveRiskSettings = (settings) => {
+    setRiskSettings(settings);
+    localStorage.setItem('riskSettings', JSON.stringify(settings));
+    alert('Настройки риск-менеджмента сохранены успешно!');
+  };
+  
   // Handle export data
   const handleExportData = () => {
     const dataToExport = {
@@ -99,13 +122,14 @@ const Settings = ({
       dailyTarget,
       days,
       archivedDays,
-      goals
+      goals,
+      riskSettings
     };
     
     exportDataToJson(dataToExport);
   };
   
-  // Show reset confirmation
+  // Handle show reset confirmation
   const handleShowResetConfirm = (type) => {
     setResetType(type);
     setShowResetConfirm(true);
@@ -113,212 +137,190 @@ const Settings = ({
   
   // Handle reset
   const handleReset = () => {
-    switch (resetType) {
-      case 'days':
-        setDays([]);
-        // Reset current deposit to match initial deposit
-        setDeposit(initialDeposit);
-        break;
-      case 'archive':
-        setArchivedDays([]);
-        break;
-      case 'goals':
-        setGoals([]);
-        break;
-      case 'all':
-        setDays([]);
-        setArchivedDays([]);
-        setGoals([]);
-        setInitialDeposit(30);
-        setLeverage(10);
-        setDailyTarget(3);
-        setDeposit(30); // Also reset current deposit
-        // Update the input fields
-        setNewInitialDeposit(30);
-        setNewLeverage(10);
-        setNewDailyTarget(3);
-        break;
-      default:
-        break;
+    if (resetType === 'all') {
+      // Reset all data
+      setDeposit(initialDeposit);
+      setDays([]);
+      setArchivedDays([]);
+      setGoals([]);
+      setRiskSettings({
+        tradingDaysPerMonth: 20,
+        tradesPerDay: 10,
+        updatePeriod: 'monthly',
+        updateByGrowth: false,
+        growthThreshold: 10,
+        profitLimit: 60,
+        lastUpdateDate: new Date().toISOString(),
+        lastUpdateDeposit: initialDeposit
+      });
+    } else if (resetType === 'days') {
+      // Reset only days
+      setDays([]);
+      setArchivedDays([]);
+    } else if (resetType === 'goals') {
+      // Reset only goals
+      setGoals([]);
     }
     
     setShowResetConfirm(false);
+    alert('Сброс выполнен успешно!');
   };
   
-  // Handle glassmorphism style selection
+  // Handle glassmorphism change
   const handleGlassmorphismChange = (style) => {
     setGlassmorphismStyle(style);
   };
   
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-blue-300 mb-6">Настройки</h1>
+    <div className="space-y-8">
+      <h1 className="text-2xl font-bold mb-8" style={{ color: 'var(--color-text-primary)' }}>Настройки</h1>
       
-      {/* Glassmorphism Settings */}
-      <GlassmorphismSettings 
-        onSelectStyle={handleGlassmorphismChange}
-        currentStyle={glassmorphismStyle}
-      />
-      
-      {/* General Settings */}
-      <div className="bg-gray-800 p-5 rounded-lg mb-6">
-        <h2 className="text-xl font-semibold text-blue-300 mb-4">Общие настройки</h2>
+      {/* Basic Settings */}
+      <div className="mac-card fade-in" style={{ backgroundColor: 'var(--color-card)', color: 'var(--color-text-primary)' }}>
+        <h2 className="text-xl font-medium mb-6" style={{ color: 'var(--color-accent)' }}>Основные настройки</h2>
         
         <div className="space-y-4">
           <div>
-            <label className="block text-gray-300 mb-2">Начальный депозит ($):</label>
+            <label className="block mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+              Кредитное плечо
+            </label>
             <input
               type="number"
-              min="0.01"
-              step="0.01"
-              value={newInitialDeposit}
-              onChange={(e) => setNewInitialDeposit(parseFloat(e.target.value) || 0)}
-              className="w-full p-3 bg-gray-700 border border-gray-600 rounded text-white"
-            />
-            <p className="text-gray-400 text-sm mt-1">Текущее значение: ${initialDeposit}</p>
-          </div>
-          
-          <div>
-            <label className="block text-gray-300 mb-2">Плечо (x):</label>
-            <input
-              type="number"
-              min="1"
-              step="1"
               value={newLeverage}
-              onChange={(e) => setNewLeverage(parseFloat(e.target.value) || 0)}
-              className="w-full p-3 bg-gray-700 border border-gray-600 rounded text-white"
+              onChange={(e) => setNewLeverage(Number(e.target.value))}
+              className="w-full p-2 rounded-md"
+              style={{ 
+                backgroundColor: 'var(--color-input)', 
+                color: 'var(--color-text-primary)',
+                border: '1px solid var(--color-border)'
+              }}
             />
-            <p className="text-gray-400 text-sm mt-1">Текущее значение: {leverage}x</p>
           </div>
           
           <div>
-            <label className="block text-gray-300 mb-2">Целевой процент в день (%):</label>
+            <label className="block mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+              Дневная цель (%)
+            </label>
             <input
               type="number"
-              min="0.01"
-              step="0.01"
               value={newDailyTarget}
-              onChange={(e) => setNewDailyTarget(parseFloat(e.target.value) || 0)}
-              className="w-full p-3 bg-gray-700 border border-gray-600 rounded text-white"
+              onChange={(e) => setNewDailyTarget(Number(e.target.value))}
+              className="w-full p-2 rounded-md"
+              style={{ 
+                backgroundColor: 'var(--color-input)', 
+                color: 'var(--color-text-primary)',
+                border: '1px solid var(--color-border)'
+              }}
             />
-            <p className="text-gray-400 text-sm mt-1">Текущее значение: {dailyTarget}%</p>
           </div>
           
-          <div className="flex justify-end pt-2">
+          <div>
+            <label className="block mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+              Начальный депозит
+            </label>
+            <input
+              type="number"
+              value={newInitialDeposit}
+              onChange={(e) => setNewInitialDeposit(Number(e.target.value))}
+              className="w-full p-2 rounded-md"
+              style={{ 
+                backgroundColor: 'var(--color-input)', 
+                color: 'var(--color-text-primary)',
+                border: '1px solid var(--color-border)'
+              }}
+            />
+          </div>
+          
+          <button
+            onClick={handleSaveSettings}
+            className="w-full py-2 px-4 rounded-md text-white font-medium"
+            style={{ backgroundColor: 'var(--color-accent)' }}
+          >
+            Сохранить настройки
+          </button>
+        </div>
+      </div>
+      
+      {/* Risk Management Settings */}
+      <RiskManagementSettings
+        deposit={deposit}
+        leverage={leverage}
+        riskSettings={riskSettings}
+        onSaveSettings={handleSaveRiskSettings}
+      />
+      
+      {/* Glassmorphism Settings */}
+      <GlassmorphismSettings
+        currentStyle={glassmorphismStyle}
+        onStyleChange={handleGlassmorphismChange}
+      />
+      
+      {/* Data Management */}
+      <div className="mac-card fade-in" style={{ backgroundColor: 'var(--color-card)', color: 'var(--color-text-primary)' }}>
+        <h2 className="text-xl font-medium mb-6" style={{ color: 'var(--color-accent)' }}>Управление данными</h2>
+        
+        <div className="space-y-4">
+          <button
+            onClick={handleExportData}
+            className="w-full py-2 px-4 rounded-md text-white font-medium"
+            style={{ backgroundColor: 'var(--color-accent)' }}
+          >
+            Экспорт данных
+          </button>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
-              onClick={handleSaveSettings}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={() => handleShowResetConfirm('days')}
+              className="py-2 px-4 rounded-md text-white font-medium"
+              style={{ backgroundColor: 'var(--color-warning)' }}
             >
-              Сохранить настройки
+              Сбросить дни
+            </button>
+            
+            <button
+              onClick={() => handleShowResetConfirm('goals')}
+              className="py-2 px-4 rounded-md text-white font-medium"
+              style={{ backgroundColor: 'var(--color-warning)' }}
+            >
+              Сбросить цели
+            </button>
+            
+            <button
+              onClick={() => handleShowResetConfirm('all')}
+              className="py-2 px-4 rounded-md text-white font-medium"
+              style={{ backgroundColor: 'var(--color-danger)' }}
+            >
+              Сбросить все
             </button>
           </div>
         </div>
       </div>
       
-      {/* Data Management */}
-      <div className="bg-gray-800 p-5 rounded-lg mb-6">
-        <h2 className="text-xl font-semibold text-blue-300 mb-4">Управление данными</h2>
-        
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-lg text-gray-300 mb-2">Экспорт/Импорт данных</h3>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={handleExportData}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                Экспортировать данные
-              </button>
-              
-              <button
-                onClick={() => setActiveSection('dashboard')}
-                className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
-              >
-                Импортировать данные
-              </button>
-            </div>
-            <p className="text-gray-400 text-sm mt-1">
-              Экспортируйте данные для резервного копирования или перенесите на другое устройство.
-            </p>
-          </div>
-          
-          <div className="border-t border-gray-700 pt-4 mt-2">
-            <h3 className="text-lg text-gray-300 mb-2">Сброс данных</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-              <button
-                onClick={() => handleShowResetConfirm('days')}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 opacity-80"
-              >
-                Очистить дни
-              </button>
-              
-              <button
-                onClick={() => handleShowResetConfirm('archive')}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 opacity-80"
-              >
-                Очистить архив
-              </button>
-              
-              <button
-                onClick={() => handleShowResetConfirm('goals')}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 opacity-80"
-              >
-                Очистить цели
-              </button>
-              
-              <button
-                onClick={() => handleShowResetConfirm('all')}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-              >
-                Сбросить все
-              </button>
-            </div>
-            <p className="text-gray-400 text-sm mt-1">
-              Внимание: Сброс данных приведет к необратимой потере информации. Рекомендуем сначала сделать экспорт.
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      {/* App Info */}
-      <div className="bg-gray-800 p-5 rounded-lg">
-        <h2 className="text-xl font-semibold text-blue-300 mb-4">О приложении</h2>
-        
-        <div className="space-y-2 text-gray-300">
-          <p><span className="text-gray-400">Версия:</span> 1.0.0</p>
-          <p><span className="text-gray-400">Разработчик:</span> Трейдер</p>
-          <p className="text-gray-400 text-sm mt-2">
-            Приложение для отслеживания роста депозита и торговой статистики.
-          </p>
-        </div>
-      </div>
-      
       {/* Reset Confirmation Modal */}
       {showResetConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-          <div className="bg-gray-800 p-6 rounded-lg max-w-md w-full">
-            <h3 className="text-xl font-medium mb-4 text-red-400">Подтверждение сброса</h3>
-            
-            <p className="text-white mb-6">
-              {resetType === 'days' && 'Вы уверены, что хотите удалить все записи о торговых днях?'}
-              {resetType === 'archive' && 'Вы уверены, что хотите очистить архив?'}
-              {resetType === 'goals' && 'Вы уверены, что хотите удалить все цели?'}
-              {resetType === 'all' && 'Вы уверены, что хотите полностью сбросить все данные приложения? Это действие нельзя отменить!'}
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4">Подтверждение сброса</h3>
+            <p className="mb-6">
+              {resetType === 'all' 
+                ? 'Вы уверены, что хотите сбросить все данные? Это действие нельзя отменить.'
+                : resetType === 'days'
+                ? 'Вы уверены, что хотите сбросить все дни? Это действие нельзя отменить.'
+                : 'Вы уверены, что хотите сбросить все цели? Это действие нельзя отменить.'}
             </p>
-            
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end space-x-4">
               <button
                 onClick={() => setShowResetConfirm(false)}
-                className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600"
+                className="py-2 px-4 rounded-md text-gray-600 font-medium"
               >
                 Отмена
               </button>
-              
               <button
                 onClick={handleReset}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                className="py-2 px-4 rounded-md text-white font-medium"
+                style={{ backgroundColor: 'var(--color-danger)' }}
               >
-                Да, сбросить
+                Сбросить
               </button>
             </div>
           </div>

@@ -15,8 +15,8 @@
 
 1. Клонируйте репозиторий:
 ```bash
-git clone <url-репозитория>
-cd deposit-tracker
+git clone https://github.com/RustamPlanirovich/Depo.git
+cd depo
 ```
 
 2. Установите зависимости:
@@ -66,4 +66,4 @@ npm run prod
 
 ## Лицензия
 
-MIT 
+MIT

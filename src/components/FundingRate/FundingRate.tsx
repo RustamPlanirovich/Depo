@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Table, Typography, Space, Tag, Tooltip, Alert, Row, Col, Statistic } from 'antd';
-import { InfoCircleOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+import { Card, Table, Typography, Space, Tag, Tooltip, Alert, Row, Col, Statistic, Input, Slider, Select, Button } from 'antd';
+import { InfoCircleOutlined, ArrowUpOutlined, ArrowDownOutlined, SearchOutlined } from '@ant-design/icons';
 import { binanceService, FundingRateData, HistoricalFundingRate } from '../../services/binanceService';
 import { Line } from '@ant-design/charts';
 import './FundingRate.css';
 
 const { Title, Text } = Typography;
+const { Option } = Select;
 
 interface FundingRateProps {
   className?: string;
@@ -17,12 +18,19 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
   const [historicalRates, setHistoricalRates] = useState<HistoricalFundingRate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchText, setSearchText] = useState('');
+  const [fundingThreshold, setFundingThreshold] = useState(0.3);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
-  const getHighestFundingRate = (rates: FundingRateData[]): FundingRateData | null => {
-    if (!rates || rates.length === 0) return null;
-    return rates.reduce((max, current) => 
-      Math.abs(current.fundingRate) > Math.abs(max.fundingRate) ? current : max
-    );
+  const getHighestFundingRate = (rates: FundingRateData[]): FundingRateData[] => {
+    if (!rates || rates.length === 0) return [];
+    return rates
+      .filter(rate => Math.abs(rate.fundingRate) >= fundingThreshold)
+      .sort((a, b) => {
+        const rateA = Math.abs(a.fundingRate);
+        const rateB = Math.abs(b.fundingRate);
+        return sortDirection === 'desc' ? rateB - rateA : rateA - rateB;
+      });
   };
 
   const handleSymbolSelect = async (symbol: string) => {
@@ -57,12 +65,43 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
     return () => clearInterval(interval);
   }, []);
 
+  const filteredRates = fundingRates.filter(rate => 
+    rate.symbol.toLowerCase().includes(searchText.toLowerCase())
+  );
+
   const columns = [
     {
       title: 'Пара',
       dataIndex: 'symbol',
       key: 'symbol',
       sorter: (a: FundingRateData, b: FundingRateData) => a.symbol.localeCompare(b.symbol),
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Поиск по паре"
+            value={selectedKeys[0]}
+            onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onPressEnter={() => confirm()}
+            style={{ width: 188, marginBottom: 8, display: 'block' }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Поиск
+            </Button>
+            <Button onClick={() => clearFilters()} size="small">
+              Сбросить
+            </Button>
+          </Space>
+        </div>
+      ),
+      filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+      onFilter: (value: any, record: FundingRateData) =>
+        record.symbol.toLowerCase().includes(String(value).toLowerCase()),
     },
     {
       title: 'Текущий фандинг',
@@ -115,7 +154,7 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
     },
   ];
 
-  const highestRate = getHighestFundingRate(fundingRates);
+  const highFundingRates = getHighestFundingRate(filteredRates);
 
   return (
     <div className={`funding-rate-container ${className}`}>
@@ -139,9 +178,44 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
         />
       )}
 
+      <Card className="funding-rate-filters">
+        <Row gutter={16} align="middle">
+          <Col span={8}>
+            <Text>Порог фандинга: {(fundingThreshold * 100).toFixed(2)}%</Text>
+            <Slider
+              min={0}
+              max={1}
+              step={0.01}
+              value={fundingThreshold}
+              onChange={setFundingThreshold}
+              tooltip={{ formatter: (value) => `${(Number(value) * 100).toFixed(2)}%` }}
+            />
+          </Col>
+          <Col span={8}>
+            <Select
+              value={sortDirection}
+              onChange={setSortDirection}
+              style={{ width: '100%' }}
+            >
+              <Option value="desc">По убыванию</Option>
+              <Option value="asc">По возрастанию</Option>
+            </Select>
+          </Col>
+          <Col span={8}>
+            <Input
+              placeholder="Поиск по паре"
+              prefix={<SearchOutlined />}
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+              allowClear
+            />
+          </Col>
+        </Row>
+      </Card>
+
       <Table
         columns={columns}
-        dataSource={fundingRates}
+        dataSource={filteredRates}
         loading={loading}
         rowKey="symbol"
         pagination={{ pageSize: 10 }}
@@ -174,31 +248,46 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
         </Card>
       )}
 
-      {highestRate && (
-        <Row gutter={16} className="funding-rate-stats">
-          <Col span={12}>
-            <Card className="funding-rate-stat-card">
-              <Statistic
-                title="Наивысший фандинг"
-                value={highestRate.fundingRate * 100}
-                precision={4}
-                suffix="%"
-                valueStyle={{ color: highestRate.fundingRate >= 0 ? '#3f8600' : '#cf1322' }}
-                prefix={highestRate.fundingRate >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-              />
-              <Text type="secondary">Пара: {highestRate.symbol}</Text>
-            </Card>
-          </Col>
-          <Col span={12}>
-            <Card title="Торговая стратегия" className="funding-rate-strategy-card">
-              <Text>
-                {highestRate.fundingRate > 0
-                  ? 'Рассмотрите короткие позиции, так как лонги платят шортам. Чем выше фандинг, тем выгоднее быть в шорте.'
-                  : 'Рассмотрите длинные позиции, так как шорты платят лонгам. Чем ниже (более отрицательный) фандинг, тем выгоднее быть в лонге.'}
-              </Text>
-            </Card>
-          </Col>
+      {highFundingRates.length > 0 && (
+        <Row gutter={[16, 16]} className="funding-rate-stats">
+          {highFundingRates.map((rate, index) => (
+            <Col span={8} key={rate.symbol}>
+              <Card className="funding-rate-stat-card">
+                <Statistic
+                  title={`Фандинг ${rate.symbol}`}
+                  value={rate.fundingRate * 100}
+                  precision={4}
+                  suffix="%"
+                  valueStyle={{ color: rate.fundingRate >= 0 ? '#3f8600' : '#cf1322' }}
+                  prefix={rate.fundingRate >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+                />
+                <Text type="secondary">
+                  Следующий фандинг: {new Date(rate.nextFundingTime).toLocaleTimeString()}
+                </Text>
+              </Card>
+            </Col>
+          ))}
         </Row>
+      )}
+
+      {highFundingRates.length > 0 && (
+        <Card title="Торговая стратегия" className="funding-rate-strategy-card">
+          <Text>
+            {highFundingRates[0].fundingRate > 0
+              ? 'Рассмотрите короткие позиции по следующим парам, так как лонги платят шортам. Чем выше фандинг, тем выгоднее быть в шорте.'
+              : 'Рассмотрите длинные позиции по следующим парам, так как шорты платят лонгам. Чем ниже (более отрицательный) фандинг, тем выгоднее быть в лонге.'}
+          </Text>
+          <ul style={{ marginTop: 16 }}>
+            {highFundingRates.map(rate => (
+              <li key={rate.symbol}>
+                {rate.symbol}: {(rate.fundingRate * 100).toFixed(4)}% - 
+                {rate.fundingRate > 0 
+                  ? ' выгодно быть в шорте'
+                  : ' выгодно быть в лонге'}
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
     </div>
   );

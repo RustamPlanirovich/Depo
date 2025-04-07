@@ -1,80 +1,190 @@
-import React, { useEffect, useState } from 'react';
-import { Card, Table, Typography, Space, Tag, Tooltip, Alert, Row, Col, Statistic, Input, Slider, Select, Button } from 'antd';
-import { InfoCircleOutlined, ArrowUpOutlined, ArrowDownOutlined, SearchOutlined } from '@ant-design/icons';
-import { binanceService, FundingRateData, HistoricalFundingRate } from '../../services/binanceService';
+import React, { useState, useEffect } from 'react';
+import { Table, Card, Alert, Row, Col, Statistic, Input, Slider, Select, Button, Tabs } from 'antd';
 import { Line } from '@ant-design/charts';
+import { binanceService } from '../../services/binanceService';
+import { bybitService } from '../../services/bybitService';
+import { okxService } from '../../services/okxService';
+import { SearchOutlined } from '@ant-design/icons';
 import './FundingRate.css';
 
-const { Title, Text } = Typography;
+const { Search } = Input;
 const { Option } = Select;
+const { TabPane } = Tabs;
+
+interface BaseFundingRate {
+  symbol: string;
+  fundingRate: number;
+  predictedRate: number;
+  currentPrice: number;
+  nextFundingTime: number;
+  volume24h: number;
+}
+
+interface FundingRate extends BaseFundingRate {
+  exchange: string;
+}
+
+interface HistoricalRate {
+  symbol: string;
+  timestamp: number;
+  rate: number;
+  exchange: string;
+}
+
+interface ChartData {
+  date: string;
+  value: number;
+  symbol: string;
+  exchange: string;
+}
 
 interface FundingRateProps {
   className?: string;
 }
 
 const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
-  const [fundingRates, setFundingRates] = useState<FundingRateData[]>([]);
-  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
-  const [historicalRates, setHistoricalRates] = useState<HistoricalFundingRate[]>([]);
+  const [fundingRates, setFundingRates] = useState<FundingRate[]>([]);
+  const [selectedSymbols, setSelectedSymbols] = useState<string[]>([]);
+  const [historicalRates, setHistoricalRates] = useState<HistoricalRate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
   const [fundingThreshold, setFundingThreshold] = useState(0.3);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [activeExchange, setActiveExchange] = useState<string>('binance');
 
-  const getHighestFundingRate = (rates: FundingRateData[]): FundingRateData[] => {
-    if (!rates || rates.length === 0) return [];
-    return rates
+  const fetchFundingRates = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      let rates: FundingRate[] = [];
+
+      // Fetch rates from all exchanges
+      const [binanceRates, bybitRates, okxRates] = await Promise.all([
+        binanceService.getFundingRates().catch(() => []),
+        bybitService.getFundingRates().catch(() => []),
+        okxService.getFundingRates().catch(() => [])
+      ]);
+
+      // Combine rates from all exchanges
+      rates = [
+        ...binanceRates.map(rate => ({
+          symbol: rate.symbol,
+          fundingRate: rate.fundingRate,
+          predictedRate: rate.predictedRate,
+          currentPrice: rate.markPrice,
+          nextFundingTime: rate.nextFundingTime,
+          volume24h: rate.volume24h,
+          exchange: 'Binance'
+        })),
+        ...bybitRates.map(rate => ({
+          symbol: rate.symbol,
+          fundingRate: rate.fundingRate,
+          predictedRate: rate.predictedFundingRate,
+          currentPrice: rate.markPrice,
+          nextFundingTime: rate.nextFundingTime,
+          volume24h: rate.volume24h,
+          exchange: 'ByBit'
+        })),
+        ...okxRates.map(rate => ({
+          symbol: rate.symbol,
+          fundingRate: rate.fundingRate,
+          predictedRate: rate.predictedFundingRate,
+          currentPrice: rate.markPrice,
+          nextFundingTime: rate.nextFundingTime,
+          volume24h: rate.volume24h,
+          exchange: 'OKX'
+        }))
+      ];
+
+      setFundingRates(rates);
+    } catch (err) {
+      setError('Failed to fetch funding rates');
+      console.error('Error fetching funding rates:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSymbolSelect = async (symbol: string) => {
+    if (selectedSymbols.includes(symbol)) {
+      setSelectedSymbols(selectedSymbols.filter(s => s !== symbol));
+      setHistoricalRates(historicalRates.filter(rate => rate.symbol !== symbol));
+    } else {
+      setSelectedSymbols([...selectedSymbols, symbol]);
+      try {
+        let historicalData: HistoricalRate[] = [];
+        switch (activeExchange) {
+          case 'binance': {
+            const data = await binanceService.getHistoricalFundingRates(symbol);
+            historicalData = data.map(rate => ({
+              symbol,
+              timestamp: rate.fundingTime,
+              rate: rate.fundingRate,
+              exchange: 'Binance'
+            }));
+            break;
+          }
+          case 'bybit': {
+            const data = await bybitService.getHistoricalFundingRates(symbol);
+            historicalData = data.map(rate => ({
+              symbol,
+              timestamp: rate.fundingRateTimestamp,
+              rate: rate.fundingRate,
+              exchange: 'ByBit'
+            }));
+            break;
+          }
+          case 'okx': {
+            const data = await okxService.getHistoricalFundingRates(symbol);
+            historicalData = data.map(rate => ({
+              symbol,
+              timestamp: rate.fundingRateTimestamp,
+              rate: rate.fundingRate,
+              exchange: 'OKX'
+            }));
+            break;
+          }
+        }
+        
+        setHistoricalRates([...historicalRates, ...historicalData]);
+      } catch (err) {
+        console.error('Error fetching historical rates:', err);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchFundingRates();
+    const interval = setInterval(fetchFundingRates, 60000); // Обновляем каждую минуту
+    return () => clearInterval(interval);
+  }, []);
+
+  const getHighestFundingRate = () => {
+    const filteredRates = fundingRates
       .filter(rate => Math.abs(rate.fundingRate) >= fundingThreshold)
       .sort((a, b) => {
         const rateA = Math.abs(a.fundingRate);
         const rateB = Math.abs(b.fundingRate);
         return sortDirection === 'desc' ? rateB - rateA : rateA - rateB;
       });
+
+    return filteredRates.length > 0 ? filteredRates[0] : null;
   };
-
-  const handleSymbolSelect = async (symbol: string) => {
-    try {
-      setSelectedSymbol(symbol);
-      const historical = await binanceService.getHistoricalFundingRates(symbol);
-      setHistoricalRates(historical);
-    } catch (err) {
-      setError('Ошибка при загрузке исторических данных');
-      console.error('Error fetching historical data:', err);
-    }
-  };
-
-  useEffect(() => {
-    const fetchFundingRates = async () => {
-      try {
-        setLoading(true);
-        const rates = await binanceService.getFundingRates();
-        setFundingRates(rates);
-        setError(null);
-      } catch (err) {
-        setError('Ошибка при загрузке данных о фандинге');
-        console.error('Error fetching funding rates:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFundingRates();
-    const interval = setInterval(fetchFundingRates, 60000); // Обновление каждую минуту
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const filteredRates = fundingRates.filter(rate => 
-    rate.symbol.toLowerCase().includes(searchText.toLowerCase())
-  );
 
   const columns = [
+    {
+      title: 'Биржа',
+      dataIndex: 'exchange',
+      key: 'exchange',
+      width: 100,
+    },
     {
       title: 'Пара',
       dataIndex: 'symbol',
       key: 'symbol',
-      sorter: (a: FundingRateData, b: FundingRateData) => a.symbol.localeCompare(b.symbol),
+      width: 120,
       filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
         <div style={{ padding: 8 }}>
           <Input
@@ -84,131 +194,157 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
             onPressEnter={() => confirm()}
             style={{ width: 188, marginBottom: 8, display: 'block' }}
           />
-          <Space>
-            <Button
-              type="primary"
-              onClick={() => confirm()}
-              size="small"
-              style={{ width: 90 }}
-            >
-              Поиск
-            </Button>
-            <Button onClick={() => clearFilters()} size="small">
-              Сбросить
-            </Button>
-          </Space>
+          <Button
+            type="primary"
+            onClick={() => confirm()}
+            size="small"
+            style={{ width: 90, marginRight: 8 }}
+          >
+            Поиск
+          </Button>
+          <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
+            Сброс
+          </Button>
         </div>
       ),
       filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
-      onFilter: (value: any, record: FundingRateData) =>
+      onFilter: (value: any, record: FundingRate) =>
         record.symbol.toLowerCase().includes(String(value).toLowerCase()),
     },
     {
       title: 'Текущий фандинг',
       dataIndex: 'fundingRate',
       key: 'fundingRate',
+      width: 150,
+      sorter: (a: FundingRate, b: FundingRate) => a.fundingRate - b.fundingRate,
       render: (rate: number) => (
-        <Tag color={rate >= 0 ? 'green' : 'red'}>
-          {(rate * 100).toFixed(4)}%
-        </Tag>
+        <span style={{ color: rate >= 0 ? '#52c41a' : '#f5222d' }}>
+          {rate.toFixed(4)}%
+        </span>
       ),
-      sorter: (a: FundingRateData, b: FundingRateData) => a.fundingRate - b.fundingRate,
     },
     {
-      title: 'Прогноз фандинга',
+      title: 'Предсказанный фандинг',
       dataIndex: 'predictedRate',
       key: 'predictedRate',
+      width: 150,
       render: (rate: number) => (
-        <Tag color={rate >= 0 ? 'green' : 'red'}>
-          {(rate * 100).toFixed(4)}%
-        </Tag>
+        <span style={{ color: rate >= 0 ? '#52c41a' : '#f5222d' }}>
+          {rate.toFixed(4)}%
+        </span>
       ),
     },
     {
       title: 'Текущая цена',
-      dataIndex: 'price',
-      key: 'price',
-      render: (price: number) => `$${price.toLocaleString()}`,
+      dataIndex: 'currentPrice',
+      key: 'currentPrice',
+      width: 150,
+      render: (price: number) => `$${price.toFixed(2)}`,
     },
     {
-      title: 'Объем за 24ч',
+      title: 'Объем 24ч',
       dataIndex: 'volume24h',
       key: 'volume24h',
-      render: (volume: number) => `$${volume.toLocaleString()}`,
-      sorter: (a: FundingRateData, b: FundingRateData) => a.volume24h - b.volume24h,
+      width: 150,
+      render: (volume: number) => `$${(volume / 1000000).toFixed(2)}M`,
     },
     {
       title: 'Следующий фандинг',
       dataIndex: 'nextFundingTime',
       key: 'nextFundingTime',
-      render: (time: number) => new Date(time).toLocaleTimeString(),
+      width: 200,
+      render: (timestamp: number) => {
+        const date = new Date(timestamp);
+        return date.toLocaleString();
+      },
     },
     {
-      title: 'Действие',
+      title: 'Действия',
       key: 'action',
-      render: (_: any, record: FundingRateData) => (
-        <Space size="middle">
-          <a onClick={() => handleSymbolSelect(record.symbol)}>Подробнее</a>
-        </Space>
+      width: 100,
+      render: (_: any, record: FundingRate) => (
+        <a onClick={() => handleSymbolSelect(record.symbol)}>
+          {selectedSymbols.includes(record.symbol) ? 'Скрыть' : 'Показать'} график
+        </a>
       ),
     },
   ];
 
-  const highFundingRates = getHighestFundingRate(filteredRates);
+  const filteredRates = fundingRates.filter(rate => 
+    rate.symbol.toLowerCase().includes(searchText.toLowerCase()) &&
+    Math.abs(rate.fundingRate) >= fundingThreshold
+  );
+
+  const chartData: ChartData[] = historicalRates.map(rate => ({
+    date: new Date(rate.timestamp).toLocaleString(),
+    value: rate.rate,
+    symbol: rate.symbol,
+    exchange: rate.exchange
+  }));
 
   return (
-    <div className={`funding-rate-container ${className}`}>
-      <Title level={2} className="funding-rate-title">Анализ Фандинга</Title>
+    <div className={`funding-rate ${className}`}>
+      <h1>Анализ фандинг-рейтов</h1>
       
       <Alert
-        message="О фандинге"
-        description="Фандинг - это платежи между трейдерами в бессрочных фьючерсных рынках. Положительные ставки означают, что лонги платят шортам, отрицательные - шорты платят лонгам. Фандинг обычно происходит каждые 8 часов."
+        message="Информация о фандинг-рейтах"
+        description="Фандинг-рейт - это механизм, который помогает поддерживать цену фьючерсов близкой к цене спота. Положительный фандинг означает, что длинные позиции платят коротким, отрицательный - наоборот."
         type="info"
         showIcon
-        className="funding-rate-alert"
+        style={{ marginBottom: 24 }}
       />
 
-      {error && (
-        <Alert
-          message="Ошибка"
-          description={error}
-          type="error"
-          showIcon
-          className="funding-rate-alert"
-        />
-      )}
+      <Tabs activeKey={activeExchange} onChange={setActiveExchange}>
+        <TabPane tab="Binance" key="binance" />
+        <TabPane tab="ByBit" key="bybit" />
+        <TabPane tab="OKX" key="okx" />
+      </Tabs>
 
       <Card className="funding-rate-filters">
-        <Row gutter={16} align="middle">
+        <Row gutter={[16, 16]}>
           <Col span={8}>
-            <Text>Порог фандинга: {(fundingThreshold * 100).toFixed(2)}%</Text>
-            <Slider
-              min={0}
-              max={1}
-              step={0.01}
-              value={fundingThreshold}
-              onChange={setFundingThreshold}
-              tooltip={{ formatter: (value) => `${(Number(value) * 100).toFixed(2)}%` }}
-            />
+            <div className="filter-section">
+              <h4>Порог фандинга (%)</h4>
+              <Slider
+                min={0}
+                max={1}
+                step={0.01}
+                value={fundingThreshold}
+                onChange={setFundingThreshold}
+                marks={{
+                  0: '0%',
+                  0.5: '0.5%',
+                  1: '1%'
+                }}
+              />
+              <div className="threshold-value">
+                Текущий порог: {fundingThreshold}%
+              </div>
+            </div>
           </Col>
           <Col span={8}>
-            <Select
-              value={sortDirection}
-              onChange={setSortDirection}
-              style={{ width: '100%' }}
-            >
-              <Option value="desc">По убыванию</Option>
-              <Option value="asc">По возрастанию</Option>
-            </Select>
+            <div className="filter-section">
+              <h4>Поиск по паре</h4>
+              <Search
+                placeholder="Введите пару (например, BTC)"
+                allowClear
+                onChange={e => setSearchText(e.target.value)}
+                style={{ width: '100%' }}
+              />
+            </div>
           </Col>
           <Col span={8}>
-            <Input
-              placeholder="Поиск по паре"
-              prefix={<SearchOutlined />}
-              value={searchText}
-              onChange={e => setSearchText(e.target.value)}
-              allowClear
-            />
+            <div className="filter-section">
+              <h4>Сортировка</h4>
+              <Select
+                value={sortDirection}
+                onChange={setSortDirection}
+                style={{ width: '100%' }}
+              >
+                <Option value="desc">По убыванию</Option>
+                <Option value="asc">По возрастанию</Option>
+              </Select>
+            </div>
           </Col>
         </Row>
       </Card>
@@ -216,79 +352,51 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
       <Table
         columns={columns}
         dataSource={filteredRates}
-        loading={loading}
         rowKey="symbol"
+        loading={loading}
         pagination={{ pageSize: 10 }}
         className="funding-rate-table"
       />
 
-      {selectedSymbol && historicalRates.length > 0 && (
-        <Card 
-          title={`История фандинга - ${selectedSymbol}`} 
-          className="funding-rate-chart-card"
-        >
+      {selectedSymbols.length > 0 && (
+        <Card title="Исторический график фандинг-рейтов" className="funding-rate-chart">
           <Line
-            data={historicalRates.map(rate => ({
-              date: new Date(rate.fundingTime).toLocaleDateString(),
-              rate: rate.fundingRate * 100
-            }))}
+            data={chartData}
             xField="date"
-            yField="rate"
-            point={{
-              size: 5,
-              shape: 'diamond',
-            }}
-            label={{
-              style: {
-                fill: '#aaa',
+            yField="value"
+            seriesField="symbol"
+            yAxis={{
+              label: {
+                formatter: (v: number) => `${v}%`,
               },
             }}
-            theme="dark"
+            tooltip={{
+              formatter: (datum: ChartData) => {
+                return {
+                  name: datum.symbol,
+                  value: `${datum.value.toFixed(4)}%`,
+                };
+              },
+            }}
           />
         </Card>
       )}
 
-      {highFundingRates.length > 0 && (
-        <Row gutter={[16, 16]} className="funding-rate-stats">
-          {highFundingRates.map((rate, index) => (
-            <Col span={8} key={rate.symbol}>
-              <Card className="funding-rate-stat-card">
-                <Statistic
-                  title={`Фандинг ${rate.symbol}`}
-                  value={rate.fundingRate * 100}
-                  precision={4}
-                  suffix="%"
-                  valueStyle={{ color: rate.fundingRate >= 0 ? '#3f8600' : '#cf1322' }}
-                  prefix={rate.fundingRate >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-                />
-                <Text type="secondary">
-                  Следующий фандинг: {new Date(rate.nextFundingTime).toLocaleTimeString()}
-                </Text>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      )}
-
-      {highFundingRates.length > 0 && (
-        <Card title="Торговая стратегия" className="funding-rate-strategy-card">
-          <Text>
-            {highFundingRates[0].fundingRate > 0
-              ? 'Рассмотрите короткие позиции по следующим парам, так как лонги платят шортам. Чем выше фандинг, тем выгоднее быть в шорте.'
-              : 'Рассмотрите длинные позиции по следующим парам, так как шорты платят лонгам. Чем ниже (более отрицательный) фандинг, тем выгоднее быть в лонге.'}
-          </Text>
-          <ul style={{ marginTop: 16 }}>
-            {highFundingRates.map(rate => (
-              <li key={rate.symbol}>
-                {rate.symbol}: {(rate.fundingRate * 100).toFixed(4)}% - 
-                {rate.fundingRate > 0 
-                  ? ' выгодно быть в шорте'
-                  : ' выгодно быть в лонге'}
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
+      <Row gutter={[16, 16]} className="funding-rate-strategies">
+        <Col span={24}>
+          <Card title="Торговые стратегии">
+            <p>Монеты с высоким фандингом (выше {fundingThreshold}%):</p>
+            <ul>
+              {filteredRates.map(rate => (
+                <li key={rate.symbol}>
+                  <strong>{rate.symbol}</strong> ({rate.exchange}): {rate.fundingRate.toFixed(4)}% - 
+                  {rate.fundingRate > 0 ? ' Рекомендуется шорт' : ' Рекомендуется лонг'}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

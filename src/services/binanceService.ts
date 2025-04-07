@@ -7,7 +7,7 @@ export interface FundingRateData {
   fundingRate: number;
   fundingTime: number;
   nextFundingTime: number;
-  price: number;
+  markPrice: number;
   predictedRate: number;
   volume24h: number;
   openInterest: number;
@@ -27,30 +27,21 @@ interface TickerData {
 }
 
 class BinanceService {
+  private readonly baseUrl = 'https://fapi.binance.com';
+
   async getFundingRates(): Promise<FundingRateData[]> {
     try {
-      const [premiumIndex, ticker24h] = await Promise.all([
-        axios.get(`${BINANCE_API_BASE}/premiumIndex`),
-        axios.get(`${BINANCE_API_BASE}/ticker/24hr`)
-      ]);
-
-      const tickerMap = new Map(
-        ticker24h.data.map((item: TickerData) => [item.symbol, item])
-      );
-
-      return premiumIndex.data.map((item: any) => {
-        const ticker = tickerMap.get(item.symbol) as TickerData | undefined;
-        return {
-          symbol: item.symbol,
-          fundingRate: parseFloat(item.lastFundingRate),
-          fundingTime: item.time,
-          nextFundingTime: item.nextFundingTime,
-          price: parseFloat(item.markPrice),
-          predictedRate: parseFloat(item.lastFundingRate),
-          volume24h: ticker ? parseFloat(ticker.volume) : 0,
-          openInterest: ticker ? parseFloat(ticker.openPrice) : 0
-        };
-      });
+      const response = await axios.get(`${this.baseUrl}/fapi/v1/premiumIndex`);
+      return response.data.map((item: any) => ({
+        symbol: item.symbol,
+        fundingRate: parseFloat(item.lastFundingRate) * 100, // Convert to percentage
+        fundingTime: item.time,
+        nextFundingTime: item.nextFundingTime,
+        markPrice: parseFloat(item.markPrice),
+        predictedRate: parseFloat(item.predictedFundingRate) * 100,
+        volume24h: parseFloat(item.volume),
+        openInterest: parseFloat(item.openInterest)
+      }));
     } catch (error) {
       console.error('Error fetching funding rates:', error);
       throw error;
@@ -59,16 +50,15 @@ class BinanceService {
 
   async getHistoricalFundingRates(symbol: string, limit: number = 100): Promise<HistoricalFundingRate[]> {
     try {
-      const response = await axios.get(`${BINANCE_API_BASE}/fundingRate`, {
+      const response = await axios.get(`${this.baseUrl}/fapi/v1/fundingRate`, {
         params: {
           symbol,
           limit
         }
       });
-
       return response.data.map((item: any) => ({
         symbol: item.symbol,
-        fundingRate: parseFloat(item.fundingRate),
+        fundingRate: parseFloat(item.fundingRate) * 100,
         fundingTime: item.fundingTime
       }));
     } catch (error) {

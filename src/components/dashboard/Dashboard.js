@@ -7,9 +7,10 @@ import StatsSummary from './StatsSummary';
 import InputForm from './InputForm';
 import RiskManagement from './RiskManagement';
 import RiskCard from './RiskCard';
-import { FiDollarSign, FiTrendingUp, FiTarget, FiShield } from 'react-icons/fi';
+import { FiDollarSign, FiTrendingUp, FiTarget, FiShield, FiShare2 } from 'react-icons/fi';
 import { calculateNextUpdateDate, shouldUpdateByDepositGrowth } from '../../utils/riskManagement';
 import { DepositOperations } from '../DepositOperations';
+import ExtendedReport from '../reports/ExtendedReport';
 
 /**
  * Dashboard component - main page with key metrics and transaction form
@@ -37,6 +38,8 @@ const Dashboard = ({
   onDeposit,
   onWithdraw
 }) => {
+  const [showReport, setShowReport] = useState(false);
+
   // Состояние для настроек риск-менеджмента
   const [riskSettings, setRiskSettings] = useState({
     tradingDaysPerMonth: 20,
@@ -132,7 +135,21 @@ const Dashboard = ({
   
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold mb-8" style={{ color: 'var(--color-text-primary)' }}>Панель управления</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>Панель управления</h1>
+        <button
+          onClick={() => setShowReport(!showReport)}
+          className="flex items-center px-4 py-2 rounded-lg text-white"
+          style={{ backgroundColor: 'var(--color-accent)' }}
+        >
+          <FiShare2 className="mr-2" />
+          {showReport ? 'Скрыть отчет' : 'Создать отчет'}
+        </button>
+      </div>
+
+      {showReport && (
+        <ExtendedReport days={days} currentDeposit={deposit} />
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Current Deposit Card */}
@@ -160,22 +177,18 @@ const Dashboard = ({
             <h2 className="text-lg font-medium" style={{ color: 'var(--color-accent)' }}>Общий рост</h2>
             <QuestionCircle 
               className="ml-2" 
-              text="Показывает абсолютный и процентный рост вашего депозита с начала торговли. Помогает оценить общую эффективность вашей торговой стратегии."
+              text="Показывает общий процент роста депозита с начала торговли. Помогает оценить эффективность вашей торговой стратегии в долгосрочной перспективе."
             />
           </div>
           <div className="text-3xl font-bold mb-2">
             <AnimatedValue 
-              value={totalGrowth} 
-              type="money" 
-              className={totalGrowth >= 0 ? 'text-green-500' : 'text-red-500'}
+              value={((deposit - initialDeposit) / initialDeposit) * 100} 
+              type="percentage" 
+              className={deposit >= initialDeposit ? 'text-green-500' : 'text-red-500'}
             />
           </div>
           <div className="mt-2" style={{ color: 'var(--color-text-tertiary)' }}>
-            <AnimatedValue 
-              value={totalGrowthPercentage} 
-              type="percentage" 
-              className={totalGrowthPercentage >= 0 ? 'text-green-500' : 'text-red-500'}
-            />
+            {deposit >= initialDeposit ? '+' : ''}<AnimatedValue value={deposit - initialDeposit} type="money" />
           </div>
         </div>
         
@@ -190,14 +203,10 @@ const Dashboard = ({
             />
           </div>
           <div className="text-3xl font-bold mb-2">
-            <AnimatedValue 
-              value={dailyTarget} 
-              type="percentage" 
-              className={goalAchieved ? 'text-green-500' : 'text-yellow-500'}
-            />
+            <AnimatedValue value={dailyTarget} type="percentage" />
           </div>
           <div className="mt-2" style={{ color: 'var(--color-text-tertiary)' }}>
-            ${dailyTargetAmount.toFixed(2)} с плечом {leverage}x
+            ${(deposit * leverage * dailyTarget / 100).toFixed(2)} с плечом {leverage}x
           </div>
         </div>
       </div>
@@ -218,7 +227,7 @@ const Dashboard = ({
           deposit={deposit} 
           leverage={leverage} 
           initialDeposit={initialDeposit}
-          riskSettings={riskSettings}
+          onSaveRiskSettings={onSaveRiskSettings}
         />
         
         <RiskCard 
@@ -240,9 +249,8 @@ const Dashboard = ({
           text="Форма для добавления новых торговых результатов. Позволяет вносить данные в процентах или в денежном выражении и сохранять историю ваших торговых дней."
         />
       </div>
-      <InputForm 
-        deposit={deposit}
-        leverage={leverage}
+      
+      <InputForm
         inputMode={inputMode}
         toggleInputMode={toggleInputMode}
         newPercentage={newPercentage}
@@ -251,18 +259,16 @@ const Dashboard = ({
         handleAmountChange={handleAmountChange}
         addDay={addDay}
         editingDayIndex={editingDayIndex}
+        editingTransactionIndex={editingTransactionIndex}
         saveEditedDay={saveEditedDay}
         cancelEditing={cancelEditing}
       />
-      
-      {/* Add DepositOperations component */}
-      <div className="dashboard-section">
-        <DepositOperations
-          onDeposit={onDeposit}
-          onWithdraw={onWithdraw}
-          currentBalance={balances}
-        />
-      </div>
+
+      <DepositOperations
+        balances={balances}
+        onDeposit={onDeposit}
+        onWithdraw={onWithdraw}
+      />
     </div>
   );
 };

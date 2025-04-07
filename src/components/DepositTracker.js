@@ -14,6 +14,7 @@ import { calculateGoalProgress, isGoalExpired } from '../utils/goals';
 import { loadData, saveDataThrottled } from '../utils/fileStorage';
 import { DepositOperations } from './DepositOperations';
 import { getCurrencyRates } from '../utils/currencyService';
+import FundingRate from './FundingRate/FundingRate';
 
 /**
  * Main DepositTracker component
@@ -1236,15 +1237,19 @@ const DepositTracker = () => {
           {activeSection === 'goals' && (
             <Goals
               goals={goals}
+              setGoals={setGoals}
+              deposit={deposit}
+              initialDeposit={initialDeposit}
+              dailyTarget={dailyTarget}
+              days={days}
               showGoalForm={showGoalForm}
               setShowGoalForm={setShowGoalForm}
-              editingGoalIndex={editingGoalIndex}
-              newGoalName={newGoalName}
-              setNewGoalName={setNewGoalName}
               newGoalType={newGoalType}
               setNewGoalType={setNewGoalType}
               newGoalValue={newGoalValue}
               setNewGoalValue={setNewGoalValue}
+              newGoalName={newGoalName}
+              setNewGoalName={setNewGoalName}
               newGoalTimeLimit={newGoalTimeLimit}
               setNewGoalTimeLimit={setNewGoalTimeLimit}
               newGoalDuration={newGoalDuration}
@@ -1257,16 +1262,11 @@ const DepositTracker = () => {
               setNewGoalDailyTarget={setNewGoalDailyTarget}
               newGoalConsecutiveWins={newGoalConsecutiveWins}
               setNewGoalConsecutiveWins={setNewGoalConsecutiveWins}
-              dailyTarget={dailyTarget}
-              addGoal={addGoal}
+              handleAddGoal={addGoal}
+              handleDeleteGoal={deleteGoal}
+              handleEditGoal={startEditingGoal}
+              editingGoalIndex={editingGoalIndex}
               cancelGoalEditing={cancelGoalEditing}
-              startEditingGoal={startEditingGoal}
-              deleteGoal={deleteGoal}
-              calculateGoalProgress={calculateGoalProgress}
-              deposit={deposit}
-              initialDeposit={initialDeposit}
-              days={days}
-              markGoalAsCompleted={markGoalAsCompleted}
             />
           )}
           
@@ -1274,47 +1274,31 @@ const DepositTracker = () => {
           {activeSection === 'analytics' && (
             <Analytics
               days={days}
-              initialDeposit={initialDeposit}
               deposit={deposit}
+              initialDeposit={initialDeposit}
               leverage={leverage}
               dailyTarget={dailyTarget}
-              goals={goals}
-              archivedDays={archivedDays}
-              includeArchived={includeArchived}
-              setIncludeArchived={setIncludeArchived}
-              timeRange={timeRange}
-              setTimeRange={setTimeRange}
             />
+          )}
+
+          {/* Funding Rate Section */}
+          {activeSection === 'funding' && (
+            <FundingRate />
           )}
           
           {/* Archive Section */}
           {activeSection === 'archive' && (
             <Archive
               archivedDays={archivedDays}
-              restoreFromArchive={restoreFromArchive}
-              deleteFromArchive={deleteFromArchive}
-              clearArchive={clearArchive}
+              setArchivedDays={setArchivedDays}
+              days={days}
+              setDays={setDays}
             />
           )}
           
           {/* Settings Section */}
           {activeSection === 'settings' && (
             <Settings
-              leverage={leverage}
-              setLeverage={setLeverage}
-              dailyTarget={dailyTarget}
-              setDailyTarget={setDailyTarget}
-              initialDeposit={initialDeposit}
-              setInitialDeposit={setInitialDeposit}
-              deposit={deposit}
-              setDeposit={setDeposit}
-              days={days}
-              setDays={setDays}
-              archivedDays={archivedDays}
-              setArchivedDays={setArchivedDays}
-              goals={goals}
-              setGoals={setGoals}
-              setActiveSection={setActiveSection}
               riskSettings={riskSettings}
               onSaveRiskSettings={handleSaveRiskSettings}
             />

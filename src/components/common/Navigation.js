@@ -9,7 +9,8 @@ import {
   FiDollarSign,
   FiChevronLeft,
   FiChevronRight,
-  FiMenu
+  FiMenu,
+  FiTrendingUp
 } from 'react-icons/fi';
 
 /**
@@ -33,6 +34,7 @@ const Navigation = ({
     { id: 'transactions', label: 'Транзакции', icon: FiList },
     { id: 'goals', label: 'Цели', icon: FiTarget },
     { id: 'analytics', label: 'Аналитика', icon: FiBarChart2 },
+    { id: 'funding', label: 'Фандинг', icon: FiTrendingUp },
     { id: 'archive', label: 'Архив', icon: FiArchive },
     { id: 'settings', label: 'Настройки', icon: FiSettings }
   ];

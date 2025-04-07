@@ -1,6 +1,7 @@
 import React from 'react';
 import TransactionList from './TransactionList';
 import TransactionsSummary from './TransactionsSummary';
+import AveragePrices from './AveragePrices';
 
 /**
  * Transactions component - Container for transactions list and summary
@@ -21,14 +22,15 @@ const Transactions = ({
       <h1 className="text-2xl font-bold mb-6">Транзакции</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Transactions Summary */}
-        <div>
+        {/* Statistics Section */}
+        <div className="space-y-6">
           <TransactionsSummary 
             days={days}
             initialDeposit={initialDeposit}
             deposit={deposit}
             leverage={leverage}
           />
+          <AveragePrices days={days} />
         </div>
         
         {/* Transactions List */}

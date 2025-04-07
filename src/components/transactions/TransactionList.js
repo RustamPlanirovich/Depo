@@ -7,52 +7,38 @@ const TransactionList = ({ days, startEditingDay, archiveDay, archiveTransaction
   const [sortField, setSortField] = useState('day');
   const [sortDirection, setSortDirection] = useState('desc');
   const [expandedDay, setExpandedDay] = useState(null);
-  
+
   // Handle sort
   const handleSort = (field) => {
     if (sortField === field) {
-      // Toggle direction if clicking the same field
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
-      // Set new field and default to descending
       setSortField(field);
       setSortDirection('desc');
     }
   };
-  
+
   // Toggle expanded day
   const toggleExpandDay = (index) => {
-    if (expandedDay === index) {
-      setExpandedDay(null);
-    } else {
-      setExpandedDay(index);
-    }
+    setExpandedDay(expandedDay === index ? null : index);
   };
-  
+
   // Format time
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
-  
+
   // Safe number formatting
   const formatNumber = (value) => {
     if (value === undefined || value === null) return '0.00';
     return Number(value).toFixed(2);
   };
-  
-  // Edit individual transaction
-  const handleEditTransaction = (e, dayIndex, transactionIndex) => {
-    e.stopPropagation();
-    startEditingDay(dayIndex, transactionIndex);
-    setActiveSection('dashboard');
-  };
-  
+
   // Sort days
   const sortedDays = [...days].sort((a, b) => {
     let comparison = 0;
-    
     switch (sortField) {
       case 'day':
         comparison = a.day - b.day;
@@ -72,16 +58,15 @@ const TransactionList = ({ days, startEditingDay, archiveDay, archiveTransaction
       default:
         comparison = a.day - b.day;
     }
-    
     return sortDirection === 'asc' ? comparison : -comparison;
   });
-  
+
   return (
     <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
       <div className="p-4 border-b border-gray-700">
         <h2 className="text-xl font-semibold text-blue-300">Транзакции</h2>
       </div>
-      
+
       {days.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="min-w-full table-responsive">
@@ -233,7 +218,7 @@ const TransactionList = ({ days, startEditingDay, archiveDay, archiveTransaction
                       </div>
                     </td>
                   </tr>
-                  
+
                   {/* Expanded transactions */}
                   {expandedDay === index && day.transactions && day.transactions.length > 1 && (
                     <tr className="bg-gray-900">
@@ -268,7 +253,11 @@ const TransactionList = ({ days, startEditingDay, archiveDay, archiveTransaction
                                 </div>
                                 <div className="flex space-x-1">
                                   <button
-                                    onClick={(e) => handleEditTransaction(e, index, tIndex)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      startEditingDay(index, tIndex);
+                                      setActiveSection('dashboard');
+                                    }}
                                     className="text-blue-400 hover:text-blue-300 p-1"
                                     title="Редактировать транзакцию"
                                   >

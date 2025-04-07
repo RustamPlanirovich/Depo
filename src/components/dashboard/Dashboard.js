@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { formatNumber, formatPercentage } from '../../utils/calculations';
 import AnimatedValue from '../common/AnimatedValue';
 import AnimatedProgressBar from '../common/AnimatedProgressBar';
@@ -6,7 +6,8 @@ import StatsSummary from './StatsSummary';
 import InputForm from './InputForm';
 import RiskManagement from './RiskManagement';
 import RiskCard from './RiskCard';
-import { FiDollarSign, FiTrendingUp, FiTarget } from 'react-icons/fi';
+import { FiDollarSign, FiTrendingUp, FiTarget, FiShield } from 'react-icons/fi';
+import { calculateNextUpdateDate, shouldUpdateByDepositGrowth } from '../../utils/riskManagement';
 
 /**
  * Dashboard component - main page with key metrics and transaction form
@@ -28,8 +29,57 @@ const Dashboard = ({
   editingDayIndex,
   editingTransactionIndex,
   saveEditedDay,
-  cancelEditing
+  cancelEditing,
+  onSaveRiskSettings
 }) => {
+  // Состояние для настроек риск-менеджмента
+  const [riskSettings, setRiskSettings] = useState({
+    tradingDaysPerMonth: 20,
+    tradesPerDay: 10,
+    updatePeriod: 'monthly',
+    updateByGrowth: false,
+    growthThreshold: 10,
+    profitLimit: 60,
+    lastUpdateDate: new Date().toISOString(),
+    lastUpdateDeposit: deposit
+  });
+  
+  // Загрузка настроек риск-менеджмента из localStorage
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('riskSettings');
+    if (savedSettings) {
+      setRiskSettings(JSON.parse(savedSettings));
+    }
+  }, []);
+  
+  // Сохранение настроек риск-менеджмента в localStorage
+  useEffect(() => {
+    localStorage.setItem('riskSettings', JSON.stringify(riskSettings));
+  }, [riskSettings]);
+  
+  // Проверка необходимости обновления риск-менеджмента
+  useEffect(() => {
+    const lastUpdate = new Date(riskSettings.lastUpdateDate);
+    const nextUpdate = calculateNextUpdateDate(riskSettings.updatePeriod, lastUpdate);
+    const shouldUpdate = new Date() >= nextUpdate || 
+                        (riskSettings.updateByGrowth && 
+                         shouldUpdateByDepositGrowth(deposit, riskSettings.lastUpdateDeposit, riskSettings.growthThreshold));
+    
+    if (shouldUpdate) {
+      // Обновляем настройки риск-менеджмента
+      const updatedSettings = {
+        ...riskSettings,
+        lastUpdateDate: new Date().toISOString(),
+        lastUpdateDeposit: deposit
+      };
+      
+      setRiskSettings(updatedSettings);
+      if (onSaveRiskSettings) {
+        onSaveRiskSettings(updatedSettings);
+      }
+    }
+  }, [deposit, riskSettings, onSaveRiskSettings]);
+  
   // Calculate total growth
   const totalGrowth = deposit - initialDeposit;
   const totalGrowthPercentage = ((deposit - initialDeposit) / initialDeposit) * 100;
@@ -67,6 +117,14 @@ const Dashboard = ({
   // Determine goal achievement status
   const goalAchieved = isTodayGoalAchieved();
   
+  // Обработчик сохранения настроек риск-менеджмента
+  const handleSaveRiskSettings = (settings) => {
+    setRiskSettings(settings);
+    if (onSaveRiskSettings) {
+      onSaveRiskSettings(settings);
+    }
+  };
+  
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-bold mb-8" style={{ color: 'var(--color-text-primary)' }}>Панель управления</h1>
@@ -99,84 +157,62 @@ const Dashboard = ({
               className={totalGrowth >= 0 ? 'text-green-500' : 'text-red-500'}
             />
           </div>
-          <div className="flex justify-between items-center">
-            <span style={{ color: 'var(--color-text-tertiary)' }}>
-              Общий процент:
-            </span>
+          <div className="mt-2" style={{ color: 'var(--color-text-tertiary)' }}>
             <AnimatedValue 
               value={totalGrowthPercentage} 
               type="percentage" 
               className={totalGrowthPercentage >= 0 ? 'text-green-500' : 'text-red-500'}
             />
           </div>
-          <div className="mt-2">
-            <AnimatedProgressBar 
-              value={Math.max(0, totalGrowthPercentage)} 
-              showPercentage={false}
-            />
-          </div>
         </div>
         
         {/* Daily Target Card */}
-        <div className={`mac-card fade-in ${goalAchieved ? 'pulse' : ''}`} style={{ backgroundColor: 'var(--color-card)', color: 'var(--color-text-primary)' }}>
+        <div className="mac-card fade-in" style={{ backgroundColor: 'var(--color-card)', color: 'var(--color-text-primary)' }}>
           <div className="flex items-center mb-4">
             <FiTarget className="mr-2 text-xl" style={{ color: 'var(--color-accent)' }} />
             <h2 className="text-lg font-medium" style={{ color: 'var(--color-accent)' }}>Дневная цель</h2>
           </div>
           <div className="text-3xl font-bold mb-2">
-            <AnimatedValue value={dailyTarget} type="percentage" />
+            <AnimatedValue 
+              value={dailyTarget} 
+              type="percentage" 
+              className={goalAchieved ? 'text-green-500' : 'text-yellow-500'}
+            />
           </div>
-          <div className="flex justify-between items-center mb-2">
-            <span style={{ color: 'var(--color-text-tertiary)' }}>
-              Целевая сумма:
-            </span>
-            <AnimatedValue value={dailyTargetAmount} type="money" />
+          <div className="mt-2" style={{ color: 'var(--color-text-tertiary)' }}>
+            ${dailyTargetAmount.toFixed(2)} с плечом {leverage}x
           </div>
-          <div className="flex justify-between items-center">
-            <span style={{ color: 'var(--color-text-tertiary)' }}>
-              Кредитное плечо:
-            </span>
-            <span className="font-medium">{leverage}x</span>
-          </div>
-          {goalAchieved && (
-            <div className="mt-3 py-2 px-3 rounded-md text-center text-sm" style={{ 
-              backgroundColor: 'var(--color-success)', 
-              color: 'white',
-              fontWeight: 'medium'
-            }}>
-              ✓ Цель на сегодня достигнута
-            </div>
-          )}
         </div>
       </div>
       
-      {/* Statistics Summary */}
-      <StatsSummary 
-        deposit={deposit}
-        leverage={leverage}
-        initialDeposit={initialDeposit}
-        days={days}
-        dailyTarget={dailyTarget}
-      />
+      {/* Risk Management Section */}
+      <div className="mt-8">
+        <div className="flex items-center mb-4">
+          <FiShield className="mr-2 text-xl" style={{ color: 'var(--color-accent)' }} />
+          <h2 className="text-xl font-bold" style={{ color: 'var(--color-text-primary)' }}>Управление рисками</h2>
+        </div>
+        
+        <RiskManagement 
+          days={days} 
+          deposit={deposit} 
+          leverage={leverage} 
+          initialDeposit={initialDeposit}
+          riskSettings={riskSettings}
+        />
+        
+        <RiskCard 
+          days={days} 
+          deposit={deposit} 
+          leverage={leverage} 
+          dailyTarget={dailyTarget}
+        />
+      </div>
       
-      {/* Risk Management */}
-      <RiskManagement
-        days={days}
-        deposit={deposit}
-        leverage={leverage}
-        initialDeposit={initialDeposit}
-      />
-      
-      {/* Risk Card */}
-      <RiskCard
-        days={days}
-        deposit={deposit}
-        leverage={leverage}
-        dailyTarget={dailyTarget}
-      />
+      {/* Stats Summary */}
+      <StatsSummary days={days} deposit={deposit} initialDeposit={initialDeposit} />
       
       {/* Input Form */}
-      <InputForm
+      <InputForm 
         deposit={deposit}
         leverage={leverage}
         inputMode={inputMode}
@@ -187,55 +223,9 @@ const Dashboard = ({
         handleAmountChange={handleAmountChange}
         addDay={addDay}
         editingDayIndex={editingDayIndex}
-        editingTransactionIndex={editingTransactionIndex}
         saveEditedDay={saveEditedDay}
         cancelEditing={cancelEditing}
       />
-      
-      {/* Recent Transactions */}
-      {days.length > 0 && (
-        <div className="mac-card slide-up" style={{ backgroundColor: 'var(--color-card)', color: 'var(--color-text-primary)' }}>
-          <h2 className="text-xl font-medium mb-6" style={{ color: 'var(--color-accent)' }}>Последние транзакции</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="py-3 text-left" style={{ color: 'var(--color-text-secondary)' }}>День</th>
-                  <th className="py-3 text-left" style={{ color: 'var(--color-text-secondary)' }}>Дата</th>
-                  <th className="py-3 text-right" style={{ color: 'var(--color-text-secondary)' }}>Процент</th>
-                  <th className="py-3 text-right" style={{ color: 'var(--color-text-secondary)' }}>Сумма</th>
-                  <th className="py-3 text-right" style={{ color: 'var(--color-text-secondary)' }}>Депозит</th>
-                </tr>
-              </thead>
-              <tbody>
-                {days.slice(-5).reverse().map((day, index) => (
-                  <tr key={index} className="border-t" style={{ borderColor: 'var(--color-border-light)' }}>
-                    <td className="py-3">{day.day}</td>
-                    <td className="py-3">{day.date}</td>
-                    <td className="py-3 text-right">
-                      <AnimatedValue 
-                        value={day.percentage} 
-                        type="percentage" 
-                        className={day.percentage >= 0 ? 'text-green-500' : 'text-red-500'}
-                      />
-                    </td>
-                    <td className="py-3 text-right">
-                      <AnimatedValue 
-                        value={day.amount} 
-                        type="money" 
-                        className={day.amount >= 0 ? 'text-green-500' : 'text-red-500'}
-                      />
-                    </td>
-                    <td className="py-3 text-right">
-                      <AnimatedValue value={day.deposit} type="money" />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

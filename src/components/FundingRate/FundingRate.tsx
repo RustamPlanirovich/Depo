@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Card, Alert, Row, Col, Statistic, Input, Slider, Select, Button, Tabs } from 'antd';
+import { Table, Card, Alert, Row, Col, Statistic, Input, Slider, Select, Button, Tabs, message } from 'antd';
 import { Line } from '@ant-design/charts';
 import { binanceService } from '../../services/binanceService';
 import { bybitService } from '../../services/bybitService';
@@ -180,11 +180,29 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
     return `${hours}ч ${minutes}м`;
   };
 
+  const copySymbolToClipboard = (symbol: string) => {
+    const formattedSymbol = symbol.includes('-') ? symbol.replace('-', '/') : symbol;
+    navigator.clipboard.writeText(formattedSymbol).then(() => {
+      message.success(`Скопировано: ${formattedSymbol}`);
+    }).catch(() => {
+      message.error('Не удалось скопировать символ');
+    });
+  };
+
   const columns = [
     {
       title: 'Символ',
       dataIndex: 'symbol',
       key: 'symbol',
+      render: (symbol: string) => (
+        <span 
+          onClick={() => copySymbolToClipboard(symbol)}
+          style={{ cursor: 'pointer', color: '#0a84ff' }}
+          className="symbol-cell"
+        >
+          {symbol}
+        </span>
+      ),
       filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
         <div style={{ padding: 8 }}>
           <Input
@@ -220,14 +238,22 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
       title: 'Текущий фандинг',
       dataIndex: 'fundingRate',
       key: 'fundingRate',
-      render: (value: number) => `${value.toFixed(4)}%`,
+      render: (value: number) => (
+        <span className={value >= 0 ? 'positive-value' : 'negative-value'}>
+          {value.toFixed(4)}%
+        </span>
+      ),
       sorter: (a: FundingRateData, b: FundingRateData) => a.fundingRate - b.fundingRate,
     },
     {
       title: 'Предсказанный фандинг',
       dataIndex: 'predictedFundingRate',
       key: 'predictedFundingRate',
-      render: (value: number) => `${isNaN(value) ? '0.00' : value.toFixed(4)}%`,
+      render: (value: number) => (
+        <span className={value >= 0 ? 'positive-value' : 'negative-value'}>
+          {isNaN(value) ? '0.00' : value.toFixed(4)}%
+        </span>
+      ),
       sorter: (a: FundingRateData, b: FundingRateData) => a.predictedFundingRate - b.predictedFundingRate,
     },
     {
@@ -269,11 +295,55 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
       const strategy = isLong ? 'Рекомендуется лонг' : 'Рекомендуется шорт';
       const timeUntilFunding = getTimeUntilFunding(rate.nextFundingTime);
       const fundingTime = formatFundingTime(rate.nextFundingTime);
+
+      const rateColor = rate.fundingRate > 0 
+    ? 'text-green-500' 
+    : rate.fundingRate < 0 
+      ? 'text-red-500' 
+      : 'text-gray-400';
+  
+  const rateBg = rate.fundingRate > 0 
+    ? 'bg-green-900/20' 
+    : rate.fundingRate < 0 
+      ? 'bg-red-900/20' 
+      : 'bg-gray-800/30';
+  
+  // Определяем классы для стратегии
+  const strategyColor = strategy.includes('лонг') 
+    ? 'text-green-400' 
+    : strategy.includes('шорт') 
+      ? 'text-red-400' 
+      : 'text-blue-400';
       
       return (
-        <li key={`${rate.symbol}-${rate.exchange}`}>
-          <strong>{rate.symbol}</strong> ({rate.exchange}): {rate.fundingRate.toFixed(4)}% - {strategy} - {fundingTime} (через {timeUntilFunding})
-        </li>
+        
+        <li  key={`${rate.symbol}-${rate.exchange}`} className="bg-gray-900 rounded-lg p-3 mb-2 shadow-md border border-gray-800 hover:border-gray-700 transition-all">
+      <div className="flex justify-between items-center">
+        {/* Левая часть с символом и биржей */}
+        <div className="flex items-center space-x-2">
+          <span className="text-blue-400 font-medium"  style={{ cursor: 'pointer', color: '#0a84ff' }} onClick={() => copySymbolToClipboard(rate.symbol)}>{rate.symbol} </span>
+          <span className="text-xs text-gray-500 px-1.5 py-0.5 bg-gray-800 rounded">{rate.exchange}</span>
+        </div>
+        
+        {/* Правая часть со ставкой финансирования */}
+        <div className={`${rateColor} font-mono px-2 py-0.5 rounded ${rateBg}`}>
+          {rate.fundingRate > 0 ? '+' : ''}{rate.fundingRate.toFixed(4)}%
+        </div>
+      </div>
+      
+      {/* Нижняя часть с деталями */}
+      <div className="mt-2 flex justify-between items-center text-sm">
+        <span className={`${strategyColor}`}>
+          {strategy}
+        </span>
+        
+        <div className="flex items-center text-gray-400 text-xs">
+          <span>{fundingTime}</span>
+          <span className="mx-1">•</span>
+          <span className="text-gray-500">через {timeUntilFunding}</span>
+        </div>
+      </div>
+    </li>
       );
     });
 
@@ -324,7 +394,7 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
   };
 
   return (
-    <div className={`funding-rate ${className}`}>
+    <div className="funding-rate">
       <h1>Анализ фандинг-рейтов</h1>
       
       <Alert
@@ -335,11 +405,7 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
         className="funding-rate-alert"
       />
 
-      <Tabs activeKey={activeExchange} onChange={setActiveExchange}>
-        <TabPane tab="Binance" key="binance" />
-        <TabPane tab="ByBit" key="bybit" />
-        <TabPane tab="OKX" key="okx" />
-      </Tabs>
+      {renderStrategies()}
 
       <Card className="funding-rate-filters">
         <Row gutter={[16, 16]}>
@@ -382,8 +448,6 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
       />
 
       {selectedSymbols.length > 0 && renderChart()}
-
-      {renderStrategies()}
     </div>
   );
 };

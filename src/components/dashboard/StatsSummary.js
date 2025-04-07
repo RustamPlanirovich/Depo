@@ -18,6 +18,10 @@ const StatsSummary = ({ deposit, leverage, initialDeposit, days, dailyTarget }) 
     <div className="mac-card slide-up" style={{ backgroundColor: 'var(--color-card)', color: 'var(--color-text-primary)' }}>
       <h2 className="text-xl font-medium mb-6" style={{ color: 'var(--color-accent)' }}>Статистика</h2>
       
+      <div className="text-sm mb-4" style={{ color: 'var(--color-text-tertiary)' }}>
+        Сводная таблица основных показателей вашей торговли. Здесь представлены все ключевые параметры счета, включая текущий и начальный депозит, общий рост, плечо, торговый объем, средний дневной процент и количество торговых дней.
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Current Deposit */}
         <div className="mac-card" style={{ backgroundColor: 'var(--color-card)', color: 'var(--color-text-primary)' }}>

@@ -136,6 +136,9 @@ const Dashboard = ({
             <FiDollarSign className="mr-2 text-xl" style={{ color: 'var(--color-accent)' }} />
             <h2 className="text-lg font-medium" style={{ color: 'var(--color-accent)' }}>Текущий депозит</h2>
           </div>
+          <div className="text-sm mb-4" style={{ color: 'var(--color-text-tertiary)' }}>
+            Отображает актуальную сумму вашего торгового депозита. Позволяет отслеживать текущее состояние вашего счета и сравнивать с начальной суммой.
+          </div>
           <div className="text-3xl font-bold mb-2">
             <AnimatedValue value={deposit} type="money" />
           </div>
@@ -149,6 +152,9 @@ const Dashboard = ({
           <div className="flex items-center mb-4">
             <FiTrendingUp className="mr-2 text-xl" style={{ color: 'var(--color-accent)' }} />
             <h2 className="text-lg font-medium" style={{ color: 'var(--color-accent)' }}>Общий рост</h2>
+          </div>
+          <div className="text-sm mb-4" style={{ color: 'var(--color-text-tertiary)' }}>
+            Показывает абсолютный и процентный рост вашего депозита с начала торговли. Помогает оценить общую эффективность вашей торговой стратегии.
           </div>
           <div className="text-3xl font-bold mb-2">
             <AnimatedValue 
@@ -172,6 +178,9 @@ const Dashboard = ({
             <FiTarget className="mr-2 text-xl" style={{ color: 'var(--color-accent)' }} />
             <h2 className="text-lg font-medium" style={{ color: 'var(--color-accent)' }}>Дневная цель</h2>
           </div>
+          <div className="text-sm mb-4" style={{ color: 'var(--color-text-tertiary)' }}>
+            Отображает ваш ежедневный целевой процент доходности. Помогает контролировать выполнение плана торговли и показывает сумму в долларах, которую нужно заработать с учетом плеча.
+          </div>
           <div className="text-3xl font-bold mb-2">
             <AnimatedValue 
               value={dailyTarget} 
@@ -190,6 +199,10 @@ const Dashboard = ({
         <div className="flex items-center mb-4">
           <FiShield className="mr-2 text-xl" style={{ color: 'var(--color-accent)' }} />
           <h2 className="text-xl font-bold" style={{ color: 'var(--color-text-primary)' }}>Управление рисками</h2>
+        </div>
+        
+        <div className="text-sm mb-4" style={{ color: 'var(--color-text-tertiary)' }}>
+          Секция управления рисками позволяет контролировать ваши риски при торговле. Здесь отображаются рекомендуемые размеры позиций, максимальные риски на сделку и другие ключевые параметры для безопасной торговли.
         </div>
         
         <RiskManagement 
@@ -212,6 +225,12 @@ const Dashboard = ({
       <StatsSummary days={days} deposit={deposit} initialDeposit={initialDeposit} />
       
       {/* Input Form */}
+      <div className="mb-4">
+        <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Ввод результатов торговли</h2>
+        <div className="text-sm mb-4" style={{ color: 'var(--color-text-tertiary)' }}>
+          Форма для добавления новых торговых результатов. Позволяет вносить данные в процентах или в денежном выражении и сохранять историю ваших торговых дней.
+        </div>
+      </div>
       <InputForm 
         deposit={deposit}
         leverage={leverage}

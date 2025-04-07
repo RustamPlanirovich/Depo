@@ -189,6 +189,17 @@ const DepositTracker = () => {
     const today = new Date().toISOString().split('T')[0];
     const todayIndex = days.findIndex(day => day.date === today);
 
+    // Рассчитываем среднюю цену пополнения
+    const depositTransactions = days.flatMap(day => 
+      day.transactions.filter(t => t.type === 'deposit')
+    );
+    const totalDeposits = depositTransactions.reduce((sum, t) => sum + t.amount, 0) + amount;
+    const averageDepositPrice = totalDeposits / (depositTransactions.length + 1);
+
+    // Получаем текущий курс валюты
+    const currentRate = rates ? rates.usdt : 1;
+    const convertedAmount = currency === 'USD' ? amount : amount * currentRate;
+
     if (todayIndex === -1) {
       // Создаем новый день
       const newDay = {
@@ -199,7 +210,8 @@ const DepositTracker = () => {
           type: 'deposit',
           amount,
           currency,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          description: `Пополнение: ${amount.toFixed(2)} ${currency} (${convertedAmount.toFixed(2)} ${currency === 'USD' ? 'USDT' : 'USD'}) | Курс: 1 USDT = ${currentRate.toFixed(4)} USD | Средняя цена пополнения: ${averageDepositPrice.toFixed(2)} ${currency}`
         }]
       };
       setDays([...days, newDay]);
@@ -210,7 +222,8 @@ const DepositTracker = () => {
         type: 'deposit',
         amount,
         currency,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        description: `Пополнение: ${amount.toFixed(2)} ${currency} (${convertedAmount.toFixed(2)} ${currency === 'USD' ? 'USDT' : 'USD'}) | Курс: 1 USDT = ${currentRate.toFixed(4)} USD | Средняя цена пополнения: ${averageDepositPrice.toFixed(2)} ${currency}`
       });
       updatedDays[todayIndex].deposit += amount;
       setDays(updatedDays);
@@ -235,6 +248,17 @@ const DepositTracker = () => {
     const today = new Date().toISOString().split('T')[0];
     const todayIndex = days.findIndex(day => day.date === today);
 
+    // Рассчитываем среднюю цену снятия
+    const withdrawTransactions = days.flatMap(day => 
+      day.transactions.filter(t => t.type === 'withdraw')
+    );
+    const totalWithdrawals = withdrawTransactions.reduce((sum, t) => sum + t.amount, 0) + amount;
+    const averageWithdrawPrice = totalWithdrawals / (withdrawTransactions.length + 1);
+
+    // Получаем текущий курс валюты
+    const currentRate = rates ? rates.usdt : 1;
+    const convertedAmount = currency === 'USD' ? amount : amount * currentRate;
+
     if (todayIndex === -1) {
       // Создаем новый день
       const newDay = {
@@ -245,7 +269,8 @@ const DepositTracker = () => {
           type: 'withdraw',
           amount,
           currency,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          description: `Снятие: ${amount.toFixed(2)} ${currency} (${convertedAmount.toFixed(2)} ${currency === 'USD' ? 'USDT' : 'USD'}) | Курс: 1 USDT = ${currentRate.toFixed(4)} USD | Средняя цена снятия: ${averageWithdrawPrice.toFixed(2)} ${currency}`
         }]
       };
       setDays([...days, newDay]);
@@ -256,7 +281,8 @@ const DepositTracker = () => {
         type: 'withdraw',
         amount,
         currency,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        description: `Снятие: ${amount.toFixed(2)} ${currency} (${convertedAmount.toFixed(2)} ${currency === 'USD' ? 'USDT' : 'USD'}) | Курс: 1 USDT = ${currentRate.toFixed(4)} USD | Средняя цена снятия: ${averageWithdrawPrice.toFixed(2)} ${currency}`
       });
       updatedDays[todayIndex].deposit -= amount;
       setDays(updatedDays);

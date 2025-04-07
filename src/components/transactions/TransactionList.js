@@ -235,43 +235,50 @@ const TransactionList = ({ days, startEditingDay, archiveDay, archiveTransaction
                         <div className="text-xs text-gray-400 mb-2">Транзакции за день:</div>
                         <div className="space-y-2">
                           {day.transactions.map((transaction, tIndex) => (
-                            <div key={tIndex} className="flex justify-between px-3 py-2 bg-gray-800 rounded">
-                              <div className="flex items-center space-x-4">
-                                <div className="text-gray-400">{tIndex + 1}.</div>
-                                <div className="text-gray-200">
-                                  {formatTime(transaction.timestamp)}
+                            <div key={tIndex} className="flex flex-col px-3 py-2 bg-gray-800 rounded">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-4">
+                                  <div className="text-gray-400">{tIndex + 1}.</div>
+                                  <div className="text-gray-200">
+                                    {formatTime(transaction.timestamp)}
+                                  </div>
+                                  <div className={`${transaction.percentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                    {transaction.percentage !== undefined ? transaction.percentage.toFixed(2) : '0.00'}%
+                                  </div>
+                                  <div className={`${transaction.amount >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                    ${transaction.amount !== undefined ? transaction.amount.toFixed(2) : '0.00'}
+                                  </div>
                                 </div>
-                                <div className={`${transaction.percentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                  {transaction.percentage !== undefined ? transaction.percentage.toFixed(2) : '0.00'}%
-                                </div>
-                                <div className={`${transaction.amount >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                  ${transaction.amount !== undefined ? transaction.amount.toFixed(2) : '0.00'}
+                                <div className="flex space-x-1">
+                                  <button
+                                    onClick={(e) => handleEditTransaction(e, index, tIndex)}
+                                    className="text-blue-400 hover:text-blue-300 p-1"
+                                    title="Редактировать транзакцию"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      archiveTransaction(index, tIndex);
+                                    }}
+                                    className="text-yellow-400 hover:text-yellow-300 p-1"
+                                    title="Архивировать транзакцию"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                      <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z" />
+                                      <path fillRule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clipRule="evenodd" />
+                                    </svg>
+                                  </button>
                                 </div>
                               </div>
-                              <div className="flex space-x-1">
-                                <button
-                                  onClick={(e) => handleEditTransaction(e, index, tIndex)}
-                                  className="text-blue-400 hover:text-blue-300 p-1"
-                                  title="Редактировать транзакцию"
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                  </svg>
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    archiveTransaction(index, tIndex);
-                                  }}
-                                  className="text-yellow-400 hover:text-yellow-300 p-1"
-                                  title="Архивировать транзакцию"
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z" />
-                                    <path fillRule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clipRule="evenodd" />
-                                  </svg>
-                                </button>
-                              </div>
+                              {transaction.description && (
+                                <div className="mt-2 text-gray-400 text-sm border-t border-gray-700 pt-2">
+                                  {transaction.description}
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>

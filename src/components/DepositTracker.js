@@ -12,6 +12,8 @@ import { readFileAsJson, validateImportedData } from '../utils/dataOperations';
 import { calculateAmountFromPercentage, calculatePercentageFromAmount } from '../utils/calculations';
 import { calculateGoalProgress, isGoalExpired } from '../utils/goals';
 import { loadData, saveDataThrottled } from '../utils/fileStorage';
+import { DepositOperations } from './DepositOperations';
+import { getCurrencyRates } from '../utils/currencyService';
 
 /**
  * Main DepositTracker component
@@ -26,6 +28,10 @@ const DepositTracker = () => {
   const [archivedDays, setArchivedDays] = useState([]);
   const [goals, setGoals] = useState([]);
   const [dataLoaded, setDataLoaded] = useState(false);
+  
+  // Состояния для работы с валютами
+  const [balances, setBalances] = useState({ USD: 0, USDT: 0 });
+  const [rates, setRates] = useState(null);
   
   // Состояние для настроек риск-менеджмента
   const [riskSettings, setRiskSettings] = useState(() => {
@@ -84,6 +90,7 @@ const DepositTracker = () => {
         setInitialDeposit(data.initialDeposit || 30);
         setArchivedDays(data.archivedDays || []);
         setGoals(data.goals || []);
+        setBalances(data.balances || { USD: 0, USDT: 0 });
         
         // Загружаем настройки риск-менеджмента, если они есть
         if (data.riskSettings) {
@@ -108,11 +115,12 @@ const DepositTracker = () => {
       initialDeposit,
       archivedDays,
       goals,
-      riskSettings
+      riskSettings,
+      balances
     };
     
     saveDataThrottled(data);
-  }, [deposit, leverage, dailyTarget, days, initialDeposit, archivedDays, goals, riskSettings, dataLoaded]);
+  }, [deposit, leverage, dailyTarget, days, initialDeposit, archivedDays, goals, riskSettings, balances, dataLoaded]);
   
   // Обработчик сохранения настроек риск-менеджмента
   const handleSaveRiskSettings = (settings) => {
@@ -152,6 +160,111 @@ const DepositTracker = () => {
       }
     }
   }, [days, deposit, initialDeposit, goals, setGoals]);
+  
+  // Загрузка курсов валют
+  useEffect(() => {
+    const fetchRates = async () => {
+      try {
+        const currentRates = await getCurrencyRates();
+        setRates(currentRates);
+      } catch (error) {
+        console.error('Failed to fetch currency rates:', error);
+      }
+    };
+
+    fetchRates();
+    const interval = setInterval(fetchRates, 60000); // Обновляем курсы каждую минуту
+
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Обработчики операций с депозитом
+  const handleDeposit = (amount, currency) => {
+    setBalances(prev => ({
+      ...prev,
+      [currency]: prev[currency] + amount
+    }));
+
+    // Добавляем транзакцию
+    const today = new Date().toISOString().split('T')[0];
+    const todayIndex = days.findIndex(day => day.date === today);
+
+    if (todayIndex === -1) {
+      // Создаем новый день
+      const newDay = {
+        day: days.length + 1,
+        date: today,
+        deposit: deposit + amount,
+        transactions: [{
+          type: 'deposit',
+          amount,
+          currency,
+          timestamp: new Date().toISOString()
+        }]
+      };
+      setDays([...days, newDay]);
+    } else {
+      // Добавляем транзакцию к существующему дню
+      const updatedDays = [...days];
+      updatedDays[todayIndex].transactions.push({
+        type: 'deposit',
+        amount,
+        currency,
+        timestamp: new Date().toISOString()
+      });
+      updatedDays[todayIndex].deposit += amount;
+      setDays(updatedDays);
+    }
+
+    // Обновляем общий депозит
+    setDeposit(prev => prev + amount);
+  };
+
+  const handleWithdraw = (amount, currency) => {
+    if (balances[currency] < amount) {
+      alert('Недостаточно средств для снятия');
+      return;
+    }
+
+    setBalances(prev => ({
+      ...prev,
+      [currency]: prev[currency] - amount
+    }));
+
+    // Добавляем транзакцию
+    const today = new Date().toISOString().split('T')[0];
+    const todayIndex = days.findIndex(day => day.date === today);
+
+    if (todayIndex === -1) {
+      // Создаем новый день
+      const newDay = {
+        day: days.length + 1,
+        date: today,
+        deposit: deposit - amount,
+        transactions: [{
+          type: 'withdraw',
+          amount,
+          currency,
+          timestamp: new Date().toISOString()
+        }]
+      };
+      setDays([...days, newDay]);
+    } else {
+      // Добавляем транзакцию к существующему дню
+      const updatedDays = [...days];
+      updatedDays[todayIndex].transactions.push({
+        type: 'withdraw',
+        amount,
+        currency,
+        timestamp: new Date().toISOString()
+      });
+      updatedDays[todayIndex].deposit -= amount;
+      setDays(updatedDays);
+    }
+
+    // Обновляем общий депозит
+    setDeposit(prev => prev - amount);
+  };
   
   // Add a new trading day
   const addDay = () => {
@@ -1072,6 +1185,9 @@ const DepositTracker = () => {
               cancelEditing={cancelEditing}
               riskSettings={riskSettings}
               onSaveRiskSettings={handleSaveRiskSettings}
+              balances={balances}
+              onDeposit={handleDeposit}
+              onWithdraw={handleWithdraw}
             />
           )}
 

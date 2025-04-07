@@ -173,16 +173,16 @@ const TransactionList = ({ days, startEditingDay, archiveDay, archiveTransaction
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className={`text-sm font-medium ${day.percentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {day.percentage.toFixed(2)}%
+                        {day.percentage !== undefined ? day.percentage.toFixed(2) : '0.00'}%
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className={`text-sm font-medium ${day.amount >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        ${day.amount.toFixed(2)}
+                        ${day.amount !== undefined ? day.amount.toFixed(2) : '0.00'}
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm text-white">${day.deposit.toFixed(2)}</div>
+                      <div className="text-sm text-white">${day.deposit !== undefined ? day.deposit.toFixed(2) : '0.00'}</div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex space-x-2">
@@ -242,10 +242,10 @@ const TransactionList = ({ days, startEditingDay, archiveDay, archiveTransaction
                                   {formatTime(transaction.timestamp)}
                                 </div>
                                 <div className={`${transaction.percentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                  {transaction.percentage.toFixed(2)}%
+                                  {transaction.percentage !== undefined ? transaction.percentage.toFixed(2) : '0.00'}%
                                 </div>
                                 <div className={`${transaction.amount >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                  ${transaction.amount.toFixed(2)}
+                                  ${transaction.amount !== undefined ? transaction.amount.toFixed(2) : '0.00'}
                                 </div>
                               </div>
                               <div className="flex space-x-1">

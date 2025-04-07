@@ -1,0 +1,108 @@
+.deposit-operations {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.deposit-operations h3 {
+  color: var(--text-color);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.amount-input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 16px;
+  background: var(--input-bg);
+  color: var(--text-color);
+}
+
+.currency-select {
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 16px;
+  background: var(--input-bg);
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.conversion-info {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.conversion-info p {
+  margin: 5px 0;
+  color: var(--text-color);
+}
+
+.rate-info {
+  font-size: 0.9em;
+  color: var(--text-secondary) !important;
+}
+
+.operation-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.operation-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.deposit-btn {
+  background: var(--success-color);
+  color: white;
+}
+
+.deposit-btn:hover {
+  background: var(--success-color-hover);
+}
+
+.withdraw-btn {
+  background: var(--danger-color);
+  color: white;
+}
+
+.withdraw-btn:hover {
+  background: var(--danger-color-hover);
+}
+
+/* Dark mode specific styles */
+@media (prefers-color-scheme: dark) {
+  .deposit-operations {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .amount-input,
+  .currency-select {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .conversion-info {
+    background: rgba(0, 0, 0, 0.2);
+  }
+} 

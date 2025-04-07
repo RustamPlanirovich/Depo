@@ -1,56 +1,11 @@
 {
-  "deposit": 31.058120300000002,
+  "deposit": 30,
   "leverage": 1,
   "dailyTarget": 3,
-  "days": [
-    {
-      "day": 1,
-      "date": "2025-04-07",
-      "percentage": 3.5270676666666665,
-      "amount": 1.0581203000000001,
-      "deposit": 31.058120300000002,
-      "transactions": [
-        {
-          "percentage": 1,
-          "amount": 0.3,
-          "timestamp": "2025-04-07T13:58:49.232Z"
-        },
-        {
-          "percentage": 1,
-          "amount": 0.303,
-          "timestamp": "2025-04-07T13:59:23.526Z"
-        },
-        {
-          "percentage": 1,
-          "amount": 0.30603,
-          "timestamp": "2025-04-07T13:59:35.943Z"
-        },
-        {
-          "percentage": 1,
-          "amount": 0.30909030000000004,
-          "timestamp": "2025-04-07T14:00:02.269Z"
-        },
-        {
-          "percentage": -0.5125228503908353,
-          "amount": -0.16,
-          "timestamp": "2025-04-07T14:00:32.629Z"
-        }
-      ]
-    }
-  ],
+  "days": [],
   "initialDeposit": 30,
   "archivedDays": [],
-  "goals": [
-    {
-      "name": "1",
-      "type": "deposit",
-      "value": "1",
-      "completed": true,
-      "autoCheck": true,
-      "timeLimit": false,
-      "completedDate": "2025-04-07T14:53:26.041Z"
-    }
-  ],
+  "goals": [],
   "riskSettings": {
     "tradingDaysPerMonth": 20,
     "tradesPerDay": 10,
@@ -60,5 +15,9 @@
     "profitLimit": 60,
     "lastUpdateDate": "2025-04-07T13:42:40.556Z",
     "lastUpdateDeposit": 30
+  },
+  "balances": {
+    "USD": 0,
+    "USDT": 1
   }
 }

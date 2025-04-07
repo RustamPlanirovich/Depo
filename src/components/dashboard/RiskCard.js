@@ -115,7 +115,7 @@ const RiskCard = ({ days, deposit, leverage, dailyTarget }) => {
           </div>
           <div className="text-xl font-bold">
             <span className={riskRewardRatio >= 1.5 ? 'text-green-500' : 'text-yellow-500'}>
-              1:{riskRewardRatio.toFixed(2)}
+              1:{isNaN(riskRewardRatio) ? '0.00' : riskRewardRatio.toFixed(2)}
             </span>
           </div>
         </div>

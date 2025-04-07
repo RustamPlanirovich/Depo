@@ -9,6 +9,7 @@ import RiskManagement from './RiskManagement';
 import RiskCard from './RiskCard';
 import { FiDollarSign, FiTrendingUp, FiTarget, FiShield } from 'react-icons/fi';
 import { calculateNextUpdateDate, shouldUpdateByDepositGrowth } from '../../utils/riskManagement';
+import { DepositOperations } from '../DepositOperations';
 
 /**
  * Dashboard component - main page with key metrics and transaction form
@@ -31,7 +32,10 @@ const Dashboard = ({
   editingTransactionIndex,
   saveEditedDay,
   cancelEditing,
-  onSaveRiskSettings
+  onSaveRiskSettings,
+  balances,
+  onDeposit,
+  onWithdraw
 }) => {
   // Состояние для настроек риск-менеджмента
   const [riskSettings, setRiskSettings] = useState({
@@ -250,6 +254,15 @@ const Dashboard = ({
         saveEditedDay={saveEditedDay}
         cancelEditing={cancelEditing}
       />
+      
+      {/* Add DepositOperations component */}
+      <div className="dashboard-section">
+        <DepositOperations
+          onDeposit={onDeposit}
+          onWithdraw={onWithdraw}
+          currentBalance={balances}
+        />
+      </div>
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import React from "react";
 import { useAnalytics } from "../../hooks";
 import { LineChart, BarChart, PieChart } from "../charts";
+import { QuestionCircle } from "../common";
 import { TIME_RANGES } from "../../constants";
 
 /**
@@ -39,10 +40,13 @@ const Analytics = ({
       
       {/* Filters */}
       <div className="mac-card fade-in" style={{ backgroundColor: "var(--color-card)", color: "var(--color-text-primary)" }}>
-        <h3 className="text-lg font-medium mb-2" style={{ color: "var(--color-accent)" }}>Фильтры</h3>
-        <div className="text-sm mb-4" style={{ color: "var(--color-text-tertiary)" }}>
-          Инструменты для настройки отображаемых данных. Позволяют выбрать временной период для анализа и включить/исключить архивные дни из расчетов.
-        </div>
+        <h3 className="text-lg font-medium mb-2" style={{ color: "var(--color-accent)" }}>
+          Фильтры
+          <QuestionCircle 
+            className="ml-2" 
+            text="Инструменты для настройки отображаемых данных. Позволяют выбрать временной период для анализа и включить/исключить архивные дни из расчетов."
+          />
+        </h3>
         <div className="flex flex-wrap items-center gap-4">
           <div>
             <label className="mr-2" style={{ color: "var(--color-text-secondary)" }}>Период:</label>
@@ -78,16 +82,24 @@ const Analytics = ({
         <>
           {/* Key Metrics */}
           <div className="mac-card fade-in" style={{ backgroundColor: "var(--color-card)", color: "var(--color-text-primary)" }}>
-            <h2 className="text-xl font-semibold mb-4" style={{ color: "var(--color-accent)" }}>Ключевые метрики</h2>
-            
-            <div className="text-sm mb-4" style={{ color: "var(--color-text-tertiary)" }}>
-              Важнейшие показатели эффективности вашей торговли за выбранный период. Здесь представлены общий рост, средний процент, успешность торговли и влияние используемого плеча.
-            </div>
+            <h2 className="text-xl font-semibold mb-4" style={{ color: "var(--color-accent)" }}>
+              Ключевые метрики
+              <QuestionCircle 
+                className="ml-2" 
+                text="Важнейшие показатели эффективности вашей торговли за выбранный период. Здесь представлены общий рост, средний процент, успешность торговли и влияние используемого плеча."
+              />
+            </h2>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Total Growth */}
               <div className="mac-card" style={{ backgroundColor: "var(--color-card-tertiary)" }}>
-                <div className="text-sm mb-1" style={{ color: "var(--color-text-tertiary)" }}>Общий рост</div>
+                <div className="text-sm mb-1" style={{ color: "var(--color-text-tertiary)" }}>
+                  Общий рост
+                  <QuestionCircle 
+                    className="ml-1" 
+                    text="Общий процентный прирост депозита за выбранный период. Ключевой показатель эффективности вашей торговой стратегии."
+                  />
+                </div>
                 <div className={`text-2xl font-bold ${metrics.totalGrowth >= 0 ? "text-green-500" : "text-red-500"}`}>
                   {metrics.totalGrowth.toFixed(2)}%
                 </div>
@@ -98,7 +110,13 @@ const Analytics = ({
               
               {/* Average Percentage */}
               <div className="mac-card" style={{ backgroundColor: "var(--color-card-tertiary)" }}>
-                <div className="text-sm mb-1" style={{ color: "var(--color-text-tertiary)" }}>Средний % в день</div>
+                <div className="text-sm mb-1" style={{ color: "var(--color-text-tertiary)" }}>
+                  Средний % в день
+                  <QuestionCircle 
+                    className="ml-1" 
+                    text="Средний процент прибыли или убытка за торговый день в выбранном периоде. Показывает типичную доходность вашей торговли."
+                  />
+                </div>
                 <div className="text-2xl font-bold" style={{ color: "var(--color-accent)" }}>
                   {metrics.averageDailyGrowth.toFixed(2)}%
                 </div>
@@ -109,7 +127,13 @@ const Analytics = ({
               
               {/* Success Rate */}
               <div className="mac-card" style={{ backgroundColor: "var(--color-card-tertiary)" }}>
-                <div className="text-sm mb-1" style={{ color: "var(--color-text-tertiary)" }}>Успешность</div>
+                <div className="text-sm mb-1" style={{ color: "var(--color-text-tertiary)" }}>
+                  Успешность
+                  <QuestionCircle 
+                    className="ml-1" 
+                    text="Процент прибыльных торговых дней. Показывает стабильность и надежность вашей торговой стратегии."
+                  />
+                </div>
                 <div className="text-2xl font-bold" style={{ color: "var(--color-accent)" }}>
                   {metrics.successRate.toFixed(2)}%
                 </div>
@@ -120,7 +144,13 @@ const Analytics = ({
               
               {/* Leverage Impact */}
               <div className="mac-card" style={{ backgroundColor: "var(--color-card-tertiary)" }}>
-                <div className="text-sm mb-1" style={{ color: "var(--color-text-tertiary)" }}>Влияние плеча</div>
+                <div className="text-sm mb-1" style={{ color: "var(--color-text-tertiary)" }}>
+                  Влияние плеча
+                  <QuestionCircle 
+                    className="ml-1" 
+                    text="Показывает, как используемое кредитное плечо влияет на ваш доход. Отображает текущий множитель и общую прибыль."
+                  />
+                </div>
                 <div className="text-2xl font-bold" style={{ color: "var(--color-accent)" }}>
                   {leverage}x
                 </div>
@@ -135,10 +165,13 @@ const Analytics = ({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {/* Deposit Growth Chart */}
             <div className="mac-card fade-in" style={{ backgroundColor: "var(--color-card)", color: "var(--color-text-primary)" }}>
-              <h3 className="text-lg font-medium mb-4" style={{ color: "var(--color-accent)" }}>Рост депозита</h3>
-              <div className="text-sm mb-4" style={{ color: "var(--color-text-tertiary)" }}>
-                График показывает динамику изменения вашего депозита с течением времени. Позволяет оценить общий тренд роста капитала и периоды наиболее эффективной торговли.
-              </div>
+              <h3 className="text-lg font-medium mb-4" style={{ color: "var(--color-accent)" }}>
+                Рост депозита
+                <QuestionCircle 
+                  className="ml-2" 
+                  text="График показывает динамику изменения вашего депозита с течением времени. Позволяет оценить общий тренд роста капитала и периоды наиболее эффективной торговли."
+                />
+              </h3>
               <div style={{ height: "300px" }}>
                 <LineChart data={chartData.depositGrowth} />
               </div>
@@ -146,10 +179,13 @@ const Analytics = ({
             
             {/* Daily Percentage Chart */}
             <div className="mac-card fade-in" style={{ backgroundColor: "var(--color-card)", color: "var(--color-text-primary)" }}>
-              <h3 className="text-lg font-medium mb-4" style={{ color: "var(--color-accent)" }}>Ежедневный процент</h3>
-              <div className="text-sm mb-4" style={{ color: "var(--color-text-tertiary)" }}>
-                Столбчатая диаграмма отображает процентные результаты каждого торгового дня. Помогает анализировать стабильность вашей торговли и выявлять дни с аномальными результатами.
-              </div>
+              <h3 className="text-lg font-medium mb-4" style={{ color: "var(--color-accent)" }}>
+                Ежедневный процент
+                <QuestionCircle 
+                  className="ml-2" 
+                  text="Столбчатая диаграмма отображает процентные результаты каждого торгового дня. Помогает анализировать стабильность вашей торговли и выявлять дни с аномальными результатами."
+                />
+              </h3>
               <div style={{ height: "300px" }}>
                 <BarChart data={chartData.dailyPercentages} />
               </div>
@@ -158,10 +194,13 @@ const Analytics = ({
           
           {/* Distribution Chart */}
           <div className="mac-card fade-in" style={{ backgroundColor: "var(--color-card)", color: "var(--color-text-primary)" }}>
-            <h3 className="text-lg font-medium mb-4" style={{ color: "var(--color-accent)" }}>Распределение результатов</h3>
-            <div className="text-sm mb-4" style={{ color: "var(--color-text-tertiary)" }}>
-              Круговая диаграмма показывает соотношение прибыльных, убыточных и безубыточных дней. Позволяет оценить общую успешность вашей торговой стратегии и соотношение выигрышных/проигрышных сделок.
-            </div>
+            <h3 className="text-lg font-medium mb-4" style={{ color: "var(--color-accent)" }}>
+              Распределение результатов
+              <QuestionCircle 
+                className="ml-2" 
+                text="Круговая диаграмма показывает соотношение прибыльных, убыточных и безубыточных дней. Позволяет оценить общую успешность вашей торговой стратегии и соотношение выигрышных/проигрышных сделок."
+              />
+            </h3>
             <div style={{ height: "300px" }}>
               <PieChart data={chartData.resultDistribution} />
             </div>

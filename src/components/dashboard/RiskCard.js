@@ -1,6 +1,7 @@
 import React from 'react';
 import { FiShield, FiPieChart, FiBarChart2 } from 'react-icons/fi';
 import AnimatedValue from '../common/AnimatedValue';
+import { QuestionCircle } from '../common';
 import { cardGradients, specialGradients } from '../../utils/gradients';
 
 /**
@@ -62,6 +63,10 @@ const RiskCard = ({ days, deposit, leverage, dailyTarget }) => {
           <FiShield className="text-xl text-blue-500" />
         </div>
         <h2 className="text-lg font-medium text-blue-500">Анализ рисков стратегии</h2>
+        <QuestionCircle 
+          className="ml-2" 
+          text="Аналитические показатели вашей торговой стратегии, основанные на исторических данных. Помогают оценить вероятность достижения поставленной цели и эффективность управления рисками."
+        />
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -76,6 +81,10 @@ const RiskCard = ({ days, deposit, leverage, dailyTarget }) => {
             <FiPieChart className="mr-2 text-sm" style={{ color: 'var(--color-text-secondary)' }} />
             <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
               Вероятность цели
+              <QuestionCircle 
+                className="ml-1" 
+                text="Процент торговых дней, в которые вам удалось достичь или превысить дневную целевую доходность. Показывает стабильность вашей стратегии."
+              />
             </div>
           </div>
           <div className="text-xl font-bold">
@@ -98,6 +107,10 @@ const RiskCard = ({ days, deposit, leverage, dailyTarget }) => {
             <FiBarChart2 className="mr-2 text-sm" style={{ color: 'var(--color-text-secondary)' }} />
             <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
               Риск/Прибыль
+              <QuestionCircle 
+                className="ml-1" 
+                text="Соотношение средней прибыли в успешных днях к среднему убытку в неудачных. Значение выше 1.5 считается хорошим и указывает на эффективное управление рисками."
+              />
             </div>
           </div>
           <div className="text-xl font-bold">
@@ -118,6 +131,10 @@ const RiskCard = ({ days, deposit, leverage, dailyTarget }) => {
             <FiPieChart className="mr-2 text-sm" style={{ color: 'var(--color-text-secondary)' }} />
             <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
               Дней до цели
+              <QuestionCircle 
+                className="ml-1" 
+                text="Расчетное количество торговых дней, которое потребуется для удвоения депозита при текущей средней доходности. Меньшее число означает более быстрый рост капитала."
+              />
             </div>
           </div>
           <div className="text-xl font-bold">

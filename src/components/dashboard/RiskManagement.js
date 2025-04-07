@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiTrendingDown, FiAlertTriangle, FiShield, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import AnimatedValue from '../common/AnimatedValue';
 import AnimatedProgressBar from '../common/AnimatedProgressBar';
+import { QuestionCircle } from '../common';
 import { cardGradients, specialGradients } from '../../utils/gradients';
 import {
   calculateDailyDrawdownLimit,
@@ -191,6 +192,10 @@ const RiskManagement = ({
             <FiTrendingDown className="text-xl text-red-500" />
           </div>
           <h2 className="text-lg font-medium text-red-500">Максимальная просадка</h2>
+          <QuestionCircle 
+            className="ml-2" 
+            text="Показывает максимальное процентное снижение вашего депозита от пикового значения. Этот индикатор помогает оценить исторические риски вашей торговой стратегии."
+          />
         </div>
         <div className="text-3xl font-bold mb-2">
           <AnimatedValue 
@@ -222,6 +227,10 @@ const RiskManagement = ({
             <FiAlertTriangle className="text-xl text-orange-500" />
           </div>
           <h2 className="text-lg font-medium text-orange-500">Риск на сделку</h2>
+          <QuestionCircle 
+            className="ml-2" 
+            text="Рекомендуемый процент депозита, который можно рисковать в одной сделке. Соблюдение этого ограничения помогает защитить ваш капитал от серии убыточных сделок."
+          />
         </div>
         <div className="text-3xl font-bold mb-2">
           <AnimatedValue 
@@ -248,6 +257,10 @@ const RiskManagement = ({
             <FiShield className="text-xl text-purple-500" />
           </div>
           <h2 className="text-lg font-medium text-purple-500">Лимит просадки на день</h2>
+          <QuestionCircle 
+            className="ml-2" 
+            text="Максимальное снижение депозита, которое допустимо в течение одного торгового дня. При достижении этого лимита рекомендуется прекратить торговлю до следующего дня."
+          />
         </div>
         <div className="text-3xl font-bold mb-2">
           ${currentDayMetrics.dailyDrawdownLimit.toFixed(2)}
@@ -278,12 +291,121 @@ const RiskManagement = ({
             <FiShield className="text-xl text-teal-500" />
           </div>
           <h2 className="text-lg font-medium text-teal-500">Лимит просадки на сделку</h2>
+          <QuestionCircle 
+            className="ml-2" 
+            text="Максимальная допустимая потеря средств в одной торговой сделке. Рассчитывается на основе дневного лимита просадки и количества сделок в день."
+          />
         </div>
         <div className="text-3xl font-bold mb-2">
           ${currentDayMetrics.tradeDrawdownLimit.toFixed(2)}
         </div>
         <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
           С учетом плеча {leverage}x: ${(currentDayMetrics.tradeDrawdownLimit * leverage).toFixed(2)}
+        </div>
+      </div>
+      
+      {/* Текущий статус риска */}
+      <div className="mac-card glassmorphism" style={{ 
+        background: currentDayMetrics.isDrawdownExceeded ? 
+          cardGradients.red.medium : 
+          currentDayMetrics.currentDrawdown > 0 ? 
+            cardGradients.orange.medium : 
+            cardGradients.teal.medium,
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        borderColor: currentDayMetrics.isDrawdownExceeded ? 
+          "rgba(239, 68, 68, 0.2)" : 
+          currentDayMetrics.currentDrawdown > 0 ? 
+            "rgba(249, 115, 22, 0.2)" : 
+            "rgba(20, 184, 166, 0.2)",
+        color: 'var(--color-text-primary)'
+      }}>
+        <div className="flex items-center mb-4">
+          <div className="p-2 rounded-lg mr-3" style={{ 
+            background: currentDayMetrics.isDrawdownExceeded ? 
+              "rgba(239, 68, 68, 0.15)" : 
+              currentDayMetrics.currentDrawdown > 0 ? 
+                "rgba(249, 115, 22, 0.15)" : 
+                "rgba(20, 184, 166, 0.15)" 
+          }}>
+            {currentDayMetrics.isDrawdownExceeded ? (
+              <FiXCircle className="text-xl text-red-500" />
+            ) : (
+              <FiCheckCircle className="text-xl" style={{ 
+                color: currentDayMetrics.currentDrawdown > 0 ? 
+                  "rgb(249, 115, 22)" : "rgb(20, 184, 166)" 
+              }} />
+            )}
+          </div>
+          <h2 className="text-lg font-medium" style={{ 
+            color: currentDayMetrics.isDrawdownExceeded ? 
+              "rgb(239, 68, 68)" : 
+              currentDayMetrics.currentDrawdown > 0 ? 
+                "rgb(249, 115, 22)" : "rgb(20, 184, 166)" 
+          }}>
+            Текущий статус риска
+          </h2>
+          <QuestionCircle 
+            className="ml-2" 
+            text="Показывает текущее состояние вашего торгового дня с точки зрения риск-менеджмента. Индикатор меняет цвет в зависимости от того, насколько вы близки к дневному лимиту просадки."
+          />
+        </div>
+        
+        <div className="flex items-center mb-2">
+          <div className="w-1/2">
+            <div className="text-sm mb-1" style={{ color: 'var(--color-text-secondary)' }}>
+              Текущая просадка
+              <QuestionCircle 
+                className="ml-1" 
+                text="Сумма всех убыточных сделок текущего торгового дня, выраженная в процентах от депозита."
+              />
+            </div>
+            <div className="text-xl font-bold" style={{ 
+              color: currentDayMetrics.isDrawdownExceeded ? 
+                "rgb(239, 68, 68)" : 
+                currentDayMetrics.currentDrawdown > 0 ? 
+                  "rgb(249, 115, 22)" : "rgb(20, 184, 166)" 
+            }}>
+              <AnimatedValue 
+                value={currentDayMetrics.currentDrawdown} 
+                type="percentage"
+              />
+            </div>
+          </div>
+          
+          <div className="w-1/2">
+            <div className="text-sm mb-1" style={{ color: 'var(--color-text-secondary)' }}>
+              Текущая прибыль
+              <QuestionCircle 
+                className="ml-1" 
+                text="Чистый результат всех сделок текущего торгового дня, выраженный в процентах от депозита."
+              />
+            </div>
+            <div className="text-xl font-bold" style={{ 
+              color: currentDayMetrics.currentProfit >= 0 ? 
+                "rgb(16, 185, 129)" : "rgb(239, 68, 68)" 
+            }}>
+              <AnimatedValue 
+                value={currentDayMetrics.currentProfit} 
+                type="percentage"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div className="mt-4">
+          <AnimatedProgressBar 
+            value={(currentDayMetrics.currentDrawdown / currentDayMetrics.dailyDrawdownLimit) * 100} 
+            showPercentage={false}
+            backgroundColor="rgba(255, 255, 255, 0.1)"
+            fillColor={
+              currentDayMetrics.isDrawdownExceeded ? 
+                "rgba(239, 68, 68, 0.7)" : 
+                currentDayMetrics.currentDrawdown > 0 ? 
+                  "rgba(249, 115, 22, 0.7)" : 
+                  "rgba(20, 184, 166, 0.7)"
+            }
+          />
         </div>
       </div>
       
@@ -300,6 +422,10 @@ const RiskManagement = ({
             <FiShield className="text-xl text-blue-500" />
           </div>
           <h2 className="text-lg font-medium text-blue-500">Статистика сделок</h2>
+          <QuestionCircle 
+            className="ml-2" 
+            text="Показывает статистику ваших сделок за текущий торговый день, включая количество прибыльных и убыточных сделок и общую результативность."
+          />
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

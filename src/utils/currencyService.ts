@@ -5,36 +5,55 @@ const COINGECKO_API_URL = 'https://api.coingecko.com/api/v3';
 export interface CurrencyRate {
   usd: number;
   usdt: number;
+  rub: number;
 }
+
+const STORAGE_KEY = 'lastKnownCurrencyRates';
+
+// Default/fallback rates
+const DEFAULT_RATES: CurrencyRate = {
+  usd: 1,
+  usdt: 1,
+  rub: 90 // примерный курс рубля как запасной вариант
+};
 
 export const getCurrencyRates = async (): Promise<CurrencyRate> => {
   try {
-    const response = await axios.get(`${COINGECKO_API_URL}/simple/price`, {
-      params: {
-        ids: 'tether',
-        vs_currencies: 'usd'
-      }
-    });
+    // Try to get rates from API
+    const response = await axios.get(
+      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,tether&vs_currencies=usd,rub'
+    );
 
-    return {
+    const rates: CurrencyRate = {
       usd: 1,
-      usdt: response.data.tether.usd
+      usdt: 1, // USDT to USD rate is always close to 1
+      rub: response.data.tether.rub || DEFAULT_RATES.rub
     };
+
+    // Save successful response to localStorage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(rates));
+    
+    return rates;
   } catch (error) {
     console.error('Error fetching currency rates:', error);
-    return {
-      usd: 1,
-      usdt: 1 // Fallback to 1:1 rate in case of error
-    };
+    
+    // Try to get last known rates from localStorage
+    const savedRates = localStorage.getItem(STORAGE_KEY);
+    if (savedRates) {
+      return JSON.parse(savedRates);
+    }
+    
+    // If no saved rates, return default rates
+    return DEFAULT_RATES;
   }
 };
 
-export const convertAmount = (amount: number, fromCurrency: 'USD' | 'USDT', toCurrency: 'USD' | 'USDT', rates: CurrencyRate): number => {
-  if (fromCurrency === toCurrency) return amount;
-  
-  if (fromCurrency === 'USD' && toCurrency === 'USDT') {
-    return amount / rates.usdt;
-  } else {
-    return amount * rates.usdt;
-  }
+export const convertAmount = (
+  amount: number,
+  fromCurrency: 'USD' | 'USDT',
+  toCurrency: 'USD' | 'USDT',
+  rates: CurrencyRate
+): number => {
+  // Since USD and USDT are approximately equal
+  return amount;
 }; 

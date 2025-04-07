@@ -13,42 +13,17 @@ const AveragePrices = ({ days }) => {
   }, []);
 
   const calculateAveragePrices = () => {
-    let totalDepositAmount = 0;
-    let totalDepositCount = 0;
-    let totalWithdrawAmount = 0;
-    let totalWithdrawCount = 0;
-
-    days.forEach(day => {
-      if (day.transactions) {
-        day.transactions.forEach(transaction => {
-          if (transaction.amount !== undefined && transaction.amount !== null) {
-            if (transaction.type === 'deposit') {
-              // For deposits, use the actual transaction amount
-              totalDepositAmount += Math.abs(transaction.amount);
-              totalDepositCount++;
-            } else if (transaction.type === 'withdraw') {
-              // For withdrawals, use the actual transaction amount
-              totalWithdrawAmount += Math.abs(transaction.amount);
-              totalWithdrawCount++;
-            }
-            // Skip trade transactions (they don't affect average prices)
-          }
-        });
-      }
-    });
-
-    // Calculate average prices
-    const avgDepositPrice = totalDepositCount > 0 ? totalDepositAmount / totalDepositCount : 0;
-    const avgWithdrawPrice = totalWithdrawCount > 0 ? totalWithdrawAmount / totalWithdrawCount : 0;
+    // Для USD/USDT курс всегда примерно 1:1
+    const avgPrice = 1;
 
     return {
       deposit: {
-        usd: avgDepositPrice,
-        rub: avgDepositPrice * (rates.rub || 0)
+        usd: avgPrice,
+        rub: avgPrice * (rates.rub || 0)
       },
       withdraw: {
-        usd: avgWithdrawPrice,
-        rub: avgWithdrawPrice * (rates.rub || 0)
+        usd: avgPrice,
+        rub: avgPrice * (rates.rub || 0)
       }
     };
   };

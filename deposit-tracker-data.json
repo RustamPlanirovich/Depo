@@ -1,37 +1,8 @@
 {
-  "deposit": 35.96,
-  "leverage": 1,
+  "deposit": 30,
+  "leverage": 10,
   "dailyTarget": 3,
-  "days": [
-    {
-      "day": 1,
-      "date": "2025-04-07",
-      "deposit": 35.96,
-      "transactions": [
-        {
-          "type": "deposit",
-          "amount": 9.96,
-          "currency": "USDT",
-          "timestamp": "2025-04-07T18:51:56.338Z",
-          "description": "Пополнение: 9.96 USDT (9.96 USD) | Курс: 1 USDT = 0.9996 USD | Средняя цена пополнения: 9.96 USDT"
-        },
-        {
-          "percentage": 2.5025025025025025,
-          "amount": 1,
-          "timestamp": "2025-04-07T18:52:11.198Z"
-        },
-        {
-          "type": "withdraw",
-          "amount": 5,
-          "currency": "USDT",
-          "timestamp": "2025-04-07T18:52:30.910Z",
-          "description": "Снятие: 5.00 USDT (5.00 USD) | Курс: 1 USDT = 0.9996 USD | Средняя цена снятия: 5.00 USDT"
-        }
-      ],
-      "percentage": null,
-      "amount": 10.96
-    }
-  ],
+  "days": [],
   "initialDeposit": 30,
   "archivedDays": [],
   "goals": [],

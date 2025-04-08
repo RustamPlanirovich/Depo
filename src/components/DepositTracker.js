@@ -1299,6 +1299,21 @@ const DepositTracker = () => {
           {/* Settings Section */}
           {activeSection === 'settings' && (
             <Settings
+              leverage={leverage}
+              setLeverage={setLeverage}
+              dailyTarget={dailyTarget}
+              setDailyTarget={setDailyTarget}
+              initialDeposit={initialDeposit}
+              setInitialDeposit={setInitialDeposit}
+              deposit={deposit}
+              setDeposit={setDeposit}
+              days={days}
+              setDays={setDays}
+              archivedDays={archivedDays}
+              setArchivedDays={setArchivedDays}
+              goals={goals}
+              setGoals={setGoals}
+              setActiveSection={setActiveSection}
               riskSettings={riskSettings}
               onSaveRiskSettings={handleSaveRiskSettings}
             />

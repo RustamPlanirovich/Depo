@@ -124,6 +124,7 @@ const RiskManagement = ({
         profitableTrades: 0,
         unprofitableTrades: 0,
         totalTrades: 0,
+        maxTrades: riskSettings.tradesPerDay,
         dailyDrawdownLimit: 0,
         tradeDrawdownLimit: 0,
         isDrawdownExceeded: false,
@@ -151,7 +152,10 @@ const RiskManagement = ({
       currentDrawdown,
       dailyDrawdownLimit,
       profitableTrades,
-      totalTrades
+      totalTrades,
+      currentDeposit: deposit,
+      initialDeposit: initialDeposit,
+      profitLimit: riskSettings.profitLimit
     });
     
     return {
@@ -160,6 +164,7 @@ const RiskManagement = ({
       profitableTrades,
       unprofitableTrades,
       totalTrades,
+      maxTrades: riskSettings.tradesPerDay,
       dailyDrawdownLimit,
       tradeDrawdownLimit,
       isDrawdownExceeded,
@@ -443,11 +448,11 @@ const RiskManagement = ({
               </div>
             </div>
             <div className="text-xl font-bold text-green-500">
-              {currentDayMetrics.profitableTrades} / {currentDayMetrics.totalTrades}
+              {currentDayMetrics.profitableTrades} / {currentDayMetrics.maxTrades}
             </div>
             <div className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
               {currentDayMetrics.totalTrades > 0 
-                ? `${((currentDayMetrics.profitableTrades / currentDayMetrics.totalTrades) * 100).toFixed(1)}%` 
+                ? `${((currentDayMetrics.profitableTrades / currentDayMetrics.maxTrades) * 100).toFixed(1)}%` 
                 : '0%'}
             </div>
           </div>
@@ -466,11 +471,11 @@ const RiskManagement = ({
               </div>
             </div>
             <div className="text-xl font-bold text-red-500">
-              {currentDayMetrics.unprofitableTrades} / {currentDayMetrics.totalTrades}
+              {currentDayMetrics.unprofitableTrades} / {currentDayMetrics.maxTrades}
             </div>
             <div className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
               {currentDayMetrics.totalTrades > 0 
-                ? `${((currentDayMetrics.unprofitableTrades / currentDayMetrics.totalTrades) * 100).toFixed(1)}%` 
+                ? `${((currentDayMetrics.unprofitableTrades / currentDayMetrics.maxTrades) * 100).toFixed(1)}%` 
                 : '0%'}
             </div>
           </div>

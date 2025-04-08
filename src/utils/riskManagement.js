@@ -125,8 +125,15 @@ export const generateRiskRecommendation = ({
   currentDrawdown,
   dailyDrawdownLimit,
   profitableTrades,
-  totalTrades
+  totalTrades,
+  currentDeposit,
+  initialDeposit,
+  profitLimit = 60
 }) => {
+  // Проверяем, превышает ли прибыль установленный лимит от начального депозита
+  const profitPercentage = ((currentDeposit - initialDeposit) / initialDeposit) * 100;
+  const isHighProfit = profitPercentage >= profitLimit;
+
   if (isDrawdownExceeded) {
     return {
       type: 'warning',
@@ -134,6 +141,13 @@ export const generateRiskRecommendation = ({
     };
   }
   
+  if (isHighProfit) {
+    return {
+      type: 'info',
+      message: `Достигнута высокая прибыль (более ${profitLimit}% к депозиту). Рекомендуется зафиксировать часть прибыли и уменьшить риски.`
+    };
+  }
+
   if (isProfitLimitReached) {
     return {
       type: 'info',

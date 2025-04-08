@@ -1267,6 +1267,7 @@ const DepositTracker = () => {
               handleEditGoal={startEditingGoal}
               editingGoalIndex={editingGoalIndex}
               cancelGoalEditing={cancelGoalEditing}
+              calculateGoalProgress={calculateGoalProgress}
             />
           )}
           

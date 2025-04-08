@@ -33,7 +33,7 @@ const Goals = ({
   newGoalConsecutiveWins,
   setNewGoalConsecutiveWins,
   dailyTarget,
-  addGoal,
+  handleAddGoal,
   cancelGoalEditing,
   startEditingGoal,
   deleteGoal,
@@ -81,7 +81,7 @@ const Goals = ({
             newGoalConsecutiveWins={newGoalConsecutiveWins}
             setNewGoalConsecutiveWins={setNewGoalConsecutiveWins}
             dailyTarget={dailyTarget}
-            addGoal={addGoal}
+            addGoal={handleAddGoal}
             cancelGoalEditing={cancelGoalEditing}
           />
         </div>

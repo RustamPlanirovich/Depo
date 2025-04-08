@@ -1,11 +1,63 @@
 {
-  "deposit": 30,
+  "deposit": 31,
   "leverage": 10,
   "dailyTarget": 3,
-  "days": [],
+  "days": [
+    {
+      "day": 1,
+      "date": "2025-04-08",
+      "percentage": 0.3333333333333333,
+      "amount": 1,
+      "deposit": 31,
+      "transactions": [
+        {
+          "percentage": 0.3333333333333333,
+          "amount": 1,
+          "timestamp": "2025-04-08T22:53:57.090Z"
+        }
+      ]
+    }
+  ],
   "initialDeposit": 30,
   "archivedDays": [],
-  "goals": [],
+  "goals": [
+    {
+      "name": "1",
+      "type": "deposit",
+      "value": "1",
+      "completed": true,
+      "autoCheck": true,
+      "timeLimit": false,
+      "completedDate": "2025-04-08T22:53:57.103Z"
+    },
+    {
+      "name": "2",
+      "type": "deposit",
+      "value": "2",
+      "completed": true,
+      "autoCheck": true,
+      "timeLimit": false,
+      "completedDate": "2025-04-08T22:53:57.103Z"
+    },
+    {
+      "name": "31",
+      "type": "deposit",
+      "value": "31",
+      "completed": true,
+      "autoCheck": true,
+      "timeLimit": false,
+      "completedDate": "2025-04-08T22:53:57.103Z"
+    },
+    {
+      "name": "31",
+      "type": "deposit",
+      "value": "30.5",
+      "completed": true,
+      "autoCheck": true,
+      "timeLimit": false,
+      "completedDate": "2025-04-08T22:53:57.103Z"
+    }
+  ],
   "riskSettings": {
     "tradingDaysPerMonth": 20,
     "tradesPerDay": 10,

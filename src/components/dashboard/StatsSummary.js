@@ -60,13 +60,16 @@ const StatsSummary = ({ deposit, leverage, initialDeposit, days, dailyTarget }) 
             Общий рост
             <QuestionCircle 
               className="ml-2" 
-              text="Процентный рост вашего депозита с момента начала торговли и абсолютное значение прибыли/убытка в денежном выражении."
+              text="Процентный рост вашего депозита с момента начала торговли. Крупно показан рост без учета плеча, ниже - с учетом кредитного плеча (1%)."
             />
           </div>
-          <div className="text-xl">
+          <div className="text-2xl font-bold mb-1">
             <AnimatedValue value={totalGrowthPercentage} type="percentage" />
-            <span className="text-sm ml-2" style={{ color: 'var(--color-text-tertiary)' }}>
-              (<AnimatedValue value={deposit - initialDeposit} type="money" showSign={false} />)
+          </div>
+          <div className="text-sm" style={{ color: 'var(--color-text-tertiary)' }}>
+            С плечом (1%): <AnimatedValue value={totalGrowthPercentage} type="percentage" />
+            <span className="ml-2">
+              (<AnimatedValue value={deposit - initialDeposit} type="money" showSign={true} />)
             </span>
           </div>
           <div className="mt-2">

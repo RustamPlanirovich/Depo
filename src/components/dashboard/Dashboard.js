@@ -177,7 +177,7 @@ const Dashboard = ({
             <h2 className="text-lg font-medium" style={{ color: 'var(--color-accent)' }}>Общий рост</h2>
             <QuestionCircle 
               className="ml-2" 
-              text="Показывает общий процент роста депозита с начала торговли. Помогает оценить эффективность вашей торговой стратегии в долгосрочной перспективе."
+              text="Показывает общий процент роста депозита с начала торговли. Крупно показан рост без учета плеча, ниже - с учетом кредитного плеча."
             />
           </div>
           <div className="text-3xl font-bold mb-2">
@@ -187,8 +187,15 @@ const Dashboard = ({
               className={deposit >= initialDeposit ? 'text-green-500' : 'text-red-500'}
             />
           </div>
+          <div className="text-sm" style={{ color: 'var(--color-text-tertiary)' }}>
+            С плечом: <AnimatedValue 
+              value={((deposit - initialDeposit) / initialDeposit) * 100 * leverage} 
+              type="percentage" 
+              className={deposit >= initialDeposit ? 'text-green-500' : 'text-red-500'}
+            />
+          </div>
           <div className="mt-2" style={{ color: 'var(--color-text-tertiary)' }}>
-            {deposit >= initialDeposit ? '' : ''}<AnimatedValue value={deposit - initialDeposit} type="money" />
+            <AnimatedValue value={deposit - initialDeposit} type="money" showSign={true} />
           </div>
         </div>
         
@@ -240,9 +247,9 @@ const Dashboard = ({
           dailyTarget={dailyTarget}
         />
       </div>
-      
       {/* Stats Summary */}
-      <StatsSummary days={days} deposit={deposit} initialDeposit={initialDeposit} />
+      {/* <StatsSummary days={days} deposit={deposit} initialDeposit={initialDeposit} /> */}
+      <StatsSummary deposit={deposit} leverage={leverage} initialDeposit={initialDeposit} days={days} dailyTarget={dailyTarget} />
       
       {/* Input Form */}
       <div className="mb-4">
@@ -253,19 +260,21 @@ const Dashboard = ({
         />
       </div>
       
-      <InputForm
-        inputMode={inputMode}
-        toggleInputMode={toggleInputMode}
-        newPercentage={newPercentage}
-        handlePercentageChange={handlePercentageChange}
-        newAmount={newAmount}
-        handleAmountChange={handleAmountChange}
-        addDay={addDay}
-        editingDayIndex={editingDayIndex}
-        editingTransactionIndex={editingTransactionIndex}
-        saveEditedDay={saveEditedDay}
-        cancelEditing={cancelEditing}
-      />
+
+      <InputForm 
+      deposit={deposit} 
+      leverage={leverage}
+      inputMode={inputMode} 
+      toggleInputMode={toggleInputMode} 
+      newPercentage={newPercentage} 
+      handlePercentageChange={handlePercentageChange} 
+      newAmount={newAmount} 
+      handleAmountChange={handleAmountChange} 
+      addDay={addDay} 
+      editingDayIndex={editingDayIndex} 
+      saveEditedDay={saveEditedDay} 
+      cancelEditing={cancelEditing} />
+      
 
       <DepositOperations
         balances={balances}

@@ -188,7 +188,7 @@ const Dashboard = ({
             />
           </div>
           <div className="mt-2" style={{ color: 'var(--color-text-tertiary)' }}>
-            {deposit >= initialDeposit ? '+' : ''}<AnimatedValue value={deposit - initialDeposit} type="money" />
+            {deposit >= initialDeposit ? '' : ''}<AnimatedValue value={deposit - initialDeposit} type="money" />
           </div>
         </div>
         
@@ -206,6 +206,9 @@ const Dashboard = ({
             <AnimatedValue value={dailyTarget} type="percentage" />
           </div>
           <div className="mt-2" style={{ color: 'var(--color-text-tertiary)' }}>
+            ${(deposit * dailyTarget / 100).toFixed(2)} без плеча
+          </div>
+          <div className="mt-1" style={{ color: 'var(--color-text-tertiary)' }}>
             ${(deposit * leverage * dailyTarget / 100).toFixed(2)} с плечом {leverage}x
           </div>
         </div>

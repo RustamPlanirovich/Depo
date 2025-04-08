@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Table, Card, Alert, Row, Col, Statistic, Input, Slider, Select, Button, Tabs, message } from 'antd';
 import { Line } from '@ant-design/charts';
+import { SearchOutlined, FireFilled } from '@ant-design/icons';
+import html2canvas from 'html2canvas';
 import { binanceService } from '../../services/binanceService';
 import { bybitService } from '../../services/bybitService';
 import { okxService } from '../../services/okxService';
-import { SearchOutlined, FireFilled } from '@ant-design/icons';
 import './FundingRate.css';
 
 const { Search } = Input;
@@ -46,6 +47,9 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
   const [fundingThreshold, setFundingThreshold] = useState(0.3);
   const [sortDirection, setSortDirection] = useState<'ascend' | 'descend'>('descend');
   const [activeExchange, setActiveExchange] = useState<string>('binance');
+  
+  // Create a ref map for strategy cards
+  const strategyCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   const fetchFundingRates = async () => {
     try {
@@ -234,6 +238,42 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
     });
   };
 
+  const copyCardAsImage = async (cardRef: HTMLDivElement) => {
+    try {
+      const canvas = await html2canvas(cardRef, {
+        backgroundColor: '#2c2c2e',
+        scale: 2, // Увеличиваем качество
+      });
+      
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({
+                'image/png': blob
+              })
+            ]);
+            message.success('Карточка скопирована в буфер обмена');
+          } catch (err) {
+            // Fallback для браузеров, которые не поддерживают копирование изображений
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'funding-card.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            message.success('Карточка сохранена как изображение');
+          }
+        }
+      }, 'image/png', 1.0);
+    } catch (error) {
+      message.error('Не удалось создать изображение');
+      console.error('Error creating image:', error);
+    }
+  };
+
   const columns = [
     {
       title: 'Символ',
@@ -355,13 +395,19 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
             const timeUntilFunding = rate.nextFundingTime - now;
             const isHighPriority = Math.abs(rate.fundingRate) >= HIGH_FUNDING_THRESHOLD;
             const isNearestFunding = timeUntilFunding <= 3600000;
+            const cardKey = `${rate.symbol}-${rate.exchange}`;
 
             return (
               <div
-                key={`${rate.symbol}-${rate.exchange}`}
+                key={cardKey}
                 className={`strategy-card ${isHighPriority ? 'high-priority' : ''} ${
                   isNearestFunding ? 'nearest-funding' : ''
                 }`}
+                ref={(el: HTMLDivElement | null) => {
+                  if (el) {
+                    strategyCardRefs.current[cardKey] = el;
+                  }
+                }}
               >
                 <div className="strategy-header">
                   <span 
@@ -370,7 +416,17 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
                   >
                     {rate.symbol}
                   </span>
-                  <span className="strategy-exchange">{rate.exchange}</span>
+                  <span 
+                    className="strategy-exchange"
+                    onClick={() => {
+                      const cardRef = strategyCardRefs.current[cardKey];
+                      if (cardRef) {
+                        copyCardAsImage(cardRef);
+                      }
+                    }}
+                  >
+                    {rate.exchange}
+                  </span>
                 </div>
                 <div className={`strategy-funding ${rate.fundingRate >= 0 ? 'positive' : ''}`}>
                   {rate.fundingRate.toFixed(4)}%

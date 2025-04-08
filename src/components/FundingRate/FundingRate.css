@@ -296,6 +296,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  isolation: isolate;
+  contain: content;
 }
 
 .strategy-card:hover {
@@ -323,6 +325,18 @@
   padding: 2px 6px;
   background-color: #2c2c2e;
   border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.strategy-exchange:hover {
+  background-color: #3a3a3c;
+  transform: translateY(-1px);
+}
+
+.strategy-exchange:active {
+  transform: translateY(0);
 }
 
 .strategy-funding {
@@ -642,4 +656,13 @@
 
 .symbol-cell:hover {
   background-color: rgba(10, 132, 255, 0.1);
+}
+
+/* Обновляем стили для карточки при создании скриншота */
+.strategy-card.screenshot {
+  padding: 16px;
+  margin: 0;
+  box-shadow: none;
+  border-radius: 12px;
+  background-color: #2c2c2e;
 } 

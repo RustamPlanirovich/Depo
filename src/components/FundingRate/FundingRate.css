@@ -282,33 +282,99 @@
   padding: 24px;
 }
 
-.funding-rate-strategies ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
+.strategies-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
 }
 
-.funding-rate-strategies li {
-  margin-bottom: 12px;
-  padding: 12px;
+.strategy-card {
   background-color: #3a3a3c;
   border-radius: 8px;
-  border: none;
+  padding: 12px;
   transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
-.funding-rate-strategies li:last-child {
-  margin-bottom: 0;
-}
-
-.funding-rate-strategies li:hover {
+.strategy-card:hover {
   background-color: #48484a;
   transform: translateY(-1px);
 }
 
-.funding-rate-strategies li strong {
+.strategy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.strategy-symbol {
   color: #0a84ff;
   font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.strategy-exchange {
+  color: #8e8e93;
+  font-size: 12px;
+  padding: 2px 6px;
+  background-color: #2c2c2e;
+  border-radius: 4px;
+}
+
+.strategy-funding {
+  color: #ff3b30;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.strategy-funding.positive {
+  color: #34c759;
+}
+
+.strategy-time {
+  color: #8e8e93;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.strategy-recommendation {
+  color: #34c759;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.fire-icon {
+  color: #ff9500;
+  margin-left: 4px;
+  animation: flicker 1s infinite;
+}
+
+@keyframes flicker {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.high-priority {
+  order: -1;
+  background-color: #3a3a3c;
+  border: 1px solid rgba(255, 149, 0, 0.3);
+}
+
+.nearest-funding {
+  order: -2;
+  background-color: #3a3a3c;
+  border: 1px solid rgba(52, 199, 89, 0.3);
 }
 
 /* Dark theme for search input */

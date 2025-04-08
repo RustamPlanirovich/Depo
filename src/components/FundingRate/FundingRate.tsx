@@ -4,7 +4,7 @@ import { Line } from '@ant-design/charts';
 import { binanceService } from '../../services/binanceService';
 import { bybitService } from '../../services/bybitService';
 import { okxService } from '../../services/okxService';
-import { SearchOutlined } from '@ant-design/icons';
+import { SearchOutlined, FireFilled } from '@ant-design/icons';
 import './FundingRate.css';
 
 const { Search } = Input;
@@ -290,66 +290,60 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
     });
 
   const renderStrategies = () => {
-    const strategies = filteredRates.map(rate => {
-      const isLong = rate.fundingRate < 0;
-      const strategy = isLong ? 'Рекомендуется лонг' : 'Рекомендуется шорт';
-      const timeUntilFunding = getTimeUntilFunding(rate.nextFundingTime);
-      const fundingTime = formatFundingTime(rate.nextFundingTime);
+    if (!fundingRates.length) return null;
 
-      const rateColor = rate.fundingRate > 0 
-    ? 'text-green-500' 
-    : rate.fundingRate < 0 
-      ? 'text-red-500' 
-      : 'text-gray-400';
-  
-  const rateBg = rate.fundingRate > 0 
-    ? 'bg-green-900/20' 
-    : rate.fundingRate < 0 
-      ? 'bg-red-900/20' 
-      : 'bg-gray-800/30';
-  
-  // Определяем классы для стратегии
-  const strategyColor = strategy.includes('лонг') 
-    ? 'text-green-400' 
-    : strategy.includes('шорт') 
-      ? 'text-red-400' 
-      : 'text-blue-400';
-      
-      return (
-        
-        <li  key={`${rate.symbol}-${rate.exchange}`} className="bg-gray-900 rounded-lg p-3 mb-2 shadow-md border border-gray-800 hover:border-gray-700 transition-all">
-      <div className="flex justify-between items-center">
-        {/* Левая часть с символом и биржей */}
-        <div className="flex items-center space-x-2">
-          <span className="text-blue-400 font-medium"  style={{ cursor: 'pointer', color: '#0a84ff' }} onClick={() => copySymbolToClipboard(rate.symbol)}>{rate.symbol} </span>
-          <span className="text-xs text-gray-500 px-1.5 py-0.5 bg-gray-800 rounded">{rate.exchange}</span>
-        </div>
-        
-        {/* Правая часть со ставкой финансирования */}
-        <div className={`${rateColor} font-mono px-2 py-0.5 rounded ${rateBg}`}>
-          {rate.fundingRate > 0 ? '+' : ''}{rate.fundingRate.toFixed(4)}%
-        </div>
-      </div>
-      
-      {/* Нижняя часть с деталями */}
-      <div className="mt-2 flex justify-between items-center text-sm">
-        <span className={`${strategyColor}`}>
-          {strategy}
-        </span>
-        
-        <div className="flex items-center text-gray-400 text-xs">
-          <span>{fundingTime}</span>
-          <span className="mx-1">•</span>
-          <span className="text-gray-500">через {timeUntilFunding}</span>
-        </div>
-      </div>
-    </li>
-      );
-    });
+    // Сортируем по времени до следующего фандинга и по размеру фандинга
+    const sortedRates = [...fundingRates]
+      .filter(rate => Math.abs(rate.fundingRate) > fundingThreshold)
+      .sort((a, b) => {
+        // Сначала сортируем по абсолютному значению фандинга
+        const fundingDiff = Math.abs(b.fundingRate) - Math.abs(a.fundingRate);
+        if (fundingDiff !== 0) return fundingDiff;
+        // Затем по времени до следующего фандинга
+        return a.nextFundingTime - b.nextFundingTime;
+      });
+
+    const now = Date.now();
+    const HIGH_FUNDING_THRESHOLD = 0.8; // Порог для отображения иконки огня (0.8%)
 
     return (
       <Card title="Торговые стратегии" className="funding-rate-strategies">
-        <ul>{strategies}</ul>
+        <div className="strategies-grid">
+          {sortedRates.map((rate) => {
+            const timeUntilFunding = rate.nextFundingTime - now;
+            const isHighPriority = Math.abs(rate.fundingRate) >= HIGH_FUNDING_THRESHOLD;
+            const isNearestFunding = timeUntilFunding <= 3600000; // Ближайший час
+
+            return (
+              <div
+                key={`${rate.symbol}-${rate.exchange}`}
+                className={`strategy-card ${isHighPriority ? 'high-priority' : ''} ${
+                  isNearestFunding ? 'nearest-funding' : ''
+                }`}
+              >
+                <div className="strategy-header">
+                  <span 
+                    className="strategy-symbol"
+                    onClick={() => copySymbolToClipboard(rate.symbol)}
+                  >
+                    {rate.symbol}
+                  </span>
+                  <span className="strategy-exchange">{rate.exchange}</span>
+                </div>
+                <div className={`strategy-funding ${rate.fundingRate >= 0 ? 'positive' : ''}`}>
+                  {rate.fundingRate.toFixed(4)}%
+                  {isHighPriority && <FireFilled className="fire-icon" />}
+                </div>
+                <div className="strategy-time">
+                  {formatFundingTime(rate.nextFundingTime)}
+                </div>
+                <div className="strategy-recommendation">
+                  {rate.fundingRate > 0 ? 'Рекомендуется шорт' : 'Рекомендуется лонг'}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </Card>
     );
   };

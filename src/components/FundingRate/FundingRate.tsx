@@ -167,17 +167,62 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
 
   const formatFundingTime = (timestamp: number) => {
     const date = new Date(timestamp);
-    const mskTime = date.toLocaleTimeString('ru-RU', { timeZone: 'Europe/Moscow', hour: '2-digit', minute: '2-digit' });
-    const localTime = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-    return `${mskTime}мск - ${localTime} местное`;
+    const mskTime = date.toLocaleTimeString('ru-RU', { 
+      timeZone: 'Europe/Moscow', 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+    const localTime = date.toLocaleTimeString('ru-RU', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+    const timeUntil = formatTimeUntilFunding(timestamp);
+    return `${mskTime}мск - ${localTime} местное (через ${timeUntil})`;
   };
 
-  const getTimeUntilFunding = (nextFundingTime: number) => {
+  const formatTimeUntilFunding = (nextFundingTime: number): string => {
     const now = Date.now();
-    const diff = nextFundingTime - now;
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}ч ${minutes}м`;
+    const timeLeft = nextFundingTime - now;
+    
+    // Конвертируем миллисекунды в минуты и часы
+    const minutes = Math.floor(timeLeft / (1000 * 60));
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    
+    if (hours > 0) {
+      if (remainingMinutes === 0) {
+        return `${hours} ${pluralize(hours, 'час', 'часа', 'часов')}`;
+      }
+      if (remainingMinutes < 10) {
+        return `${hours}:0${remainingMinutes}`;
+      }
+      return `${hours}:${remainingMinutes}`;
+    }
+    
+    if (minutes === 0) {
+      return 'менее минуты';
+    }
+    
+    return `${minutes} ${pluralize(minutes, 'мин', 'мин', 'мин')}`;
+  };
+
+  const pluralize = (number: number, one: string, few: string, many: string): string => {
+    const lastDigit = number % 10;
+    const lastTwoDigits = number % 100;
+
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
+      return many;
+    }
+
+    if (lastDigit === 1) {
+      return one;
+    }
+
+    if (lastDigit >= 2 && lastDigit <= 4) {
+      return few;
+    }
+
+    return many;
   };
 
   const copySymbolToClipboard = (symbol: string) => {
@@ -292,19 +337,16 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
   const renderStrategies = () => {
     if (!fundingRates.length) return null;
 
-    // Сортируем по времени до следующего фандинга и по размеру фандинга
     const sortedRates = [...fundingRates]
       .filter(rate => Math.abs(rate.fundingRate) > fundingThreshold)
       .sort((a, b) => {
-        // Сначала сортируем по абсолютному значению фандинга
         const fundingDiff = Math.abs(b.fundingRate) - Math.abs(a.fundingRate);
         if (fundingDiff !== 0) return fundingDiff;
-        // Затем по времени до следующего фандинга
         return a.nextFundingTime - b.nextFundingTime;
       });
 
     const now = Date.now();
-    const HIGH_FUNDING_THRESHOLD = 0.8; // Порог для отображения иконки огня (0.8%)
+    const HIGH_FUNDING_THRESHOLD = 0.8;
 
     return (
       <Card title="Торговые стратегии" className="funding-rate-strategies">
@@ -312,7 +354,7 @@ const FundingRate: React.FC<FundingRateProps> = ({ className }) => {
           {sortedRates.map((rate) => {
             const timeUntilFunding = rate.nextFundingTime - now;
             const isHighPriority = Math.abs(rate.fundingRate) >= HIGH_FUNDING_THRESHOLD;
-            const isNearestFunding = timeUntilFunding <= 3600000; // Ближайший час
+            const isNearestFunding = timeUntilFunding <= 3600000;
 
             return (
               <div
